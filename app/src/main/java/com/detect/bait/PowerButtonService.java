@@ -9,51 +9,64 @@ import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 
 public class PowerButtonService extends Service {
+
+    View mView;
+    WindowManager wm;
+
     public PowerButtonService() {
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        LinearLayout mLinear = new LinearLayout(getApplicationContext()) {
+
+        final LinearLayout mLinear = new LinearLayout(getApplicationContext()) {
 
             //home or recent button
             public void onCloseSystemDialogs(String reason) {
                 if ("globalactions".equals(reason)) {
                     Log.i("Key", "Long press on power button");
                 } else if ("homekey".equals(reason)) {
-                    //home key pressed
+                    Log.i("Key", "home key pressed");
                 } else if ("recentapps".equals(reason)) {
-                    // recent apps button clicked
+                    Log.i("Key", "recent apps button clicked");
                 }
             }
 
             @Override
             public boolean dispatchKeyEvent(KeyEvent event) {
-                if (event.getKeyCode() == KeyEvent.KEYCODE_BACK
-                        || event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP
-                        || event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN
-                        || event.getKeyCode() == KeyEvent.KEYCODE_CAMERA
-                        || event.getKeyCode() == KeyEvent.KEYCODE_POWER) {
-                    Log.i("Key", "keycode " + event.getKeyCode());
+
+                if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+                    Log.i("Key", "Back Key pressed");
+                    mView.setVisibility(VISIBLE);
+                } else if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
+                    Log.i("Key", "Volume Up Key pressed");
+                } else if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
+                    Log.i("Key", "Volume Down Key pressed");
+                } else if (event.getKeyCode() == KeyEvent.KEYCODE_CAMERA) {
+                    Log.i("Key", "Camera Key pressed");
+                } else if (event.getKeyCode() == KeyEvent.KEYCODE_POWER) {
+                    Log.i("Key", "POWER Key pressed");
                 }
+
                 return super.dispatchKeyEvent(event);
             }
         };
 
         mLinear.setFocusable(true);
 
-        View mView = LayoutInflater.from(this).inflate(R.layout.service_layout, mLinear);
-        WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+        mView = LayoutInflater.from(this).inflate(R.layout.service_layout, mLinear);
+        wm = (WindowManager) getSystemService(WINDOW_SERVICE);
 
         //params
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                100,
-                100,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
                 WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                         | WindowManager.LayoutParams.FLAG_FULLSCREEN

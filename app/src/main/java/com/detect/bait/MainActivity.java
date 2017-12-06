@@ -1,6 +1,7 @@
 package com.detect.bait;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
@@ -8,17 +9,18 @@ import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends Activity {
 
     public final static int REQUEST_CODE = 10101;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+//        setContentView(R.layout.activity_main);
 
         if (checkDrawOverlayPermission()) {
             startService(new Intent(this, PowerButtonService.class));
+            finish();
         }
     }
 
