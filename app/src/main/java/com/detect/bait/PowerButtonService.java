@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 public class PowerButtonService extends Service {
 
@@ -29,29 +30,41 @@ public class PowerButtonService extends Service {
 
             //home or recent button
             public void onCloseSystemDialogs(String reason) {
+
+                TextView tvContent = (TextView)mView.findViewById(R.id.tvContent);
+
                 if ("globalactions".equals(reason)) {
                     Log.i("Key", "Long press on power button");
+                    tvContent.setText("Long press on power button");
                 } else if ("homekey".equals(reason)) {
                     Log.i("Key", "home key pressed");
+                    tvContent.setText("home key pressed");
                 } else if ("recentapps".equals(reason)) {
                     Log.i("Key", "recent apps button clicked");
+                    tvContent.setText("recent apps button clicked");
                 }
             }
 
             @Override
             public boolean dispatchKeyEvent(KeyEvent event) {
 
+                TextView tvContent = (TextView)mView.findViewById(R.id.tvContent);
+
                 if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
                     Log.i("Key", "Back Key pressed");
-                    mView.setVisibility(VISIBLE);
+                    tvContent.setText("Back Key pressed");
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
                     Log.i("Key", "Volume Up Key pressed");
+                    tvContent.setText("Volume Up Key pressed");
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
                     Log.i("Key", "Volume Down Key pressed");
+                    tvContent.setText("Volume Down Key pressed");
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_CAMERA) {
                     Log.i("Key", "Camera Key pressed");
+                    tvContent.setText("Camera Key pressed");
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_POWER) {
                     Log.i("Key", "POWER Key pressed");
+                    tvContent.setText("POWER Key pressed");
                 }
 
                 return super.dispatchKeyEvent(event);
@@ -65,8 +78,8 @@ public class PowerButtonService extends Service {
 
         //params
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                         | WindowManager.LayoutParams.FLAG_FULLSCREEN

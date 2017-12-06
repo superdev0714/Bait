@@ -8,6 +8,7 @@ import android.os.Build;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.View;
 
 public class MainActivity extends Activity {
 
@@ -16,12 +17,19 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-//        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main);
 
-        if (checkDrawOverlayPermission()) {
-            startService(new Intent(this, PowerButtonService.class));
-            finish();
-        }
+        View signIn = (View)findViewById(R.id.rlSingIn);
+        signIn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (checkDrawOverlayPermission()) {
+                    startService(new Intent(MainActivity.this, PowerButtonService.class));
+                    finish();
+                }
+            }
+        });
+//
     }
 
 
