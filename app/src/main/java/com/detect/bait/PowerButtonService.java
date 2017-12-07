@@ -1,9 +1,11 @@
 package com.detect.bait;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -36,6 +38,13 @@ public class PowerButtonService extends Service {
                 if ("globalactions".equals(reason)) {
                     Log.i("Key", "Long press on power button");
                     tvContent.setText("Long press on power button");
+                    Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+                    sendBroadcast(closeDialog);
+
+//                    PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+//                    PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "tag");
+//                    wl.acquire();
+
                 } else if ("homekey".equals(reason)) {
                     Log.i("Key", "home key pressed");
                     tvContent.setText("home key pressed");
@@ -49,6 +58,8 @@ public class PowerButtonService extends Service {
             public boolean dispatchKeyEvent(KeyEvent event) {
 
                 TextView tvContent = (TextView)mView.findViewById(R.id.tvContent);
+
+                Log.i("Key", Integer.toString(event.getKeyCode()));
 
                 if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
                     Log.i("Key", "Back Key pressed");
@@ -65,6 +76,7 @@ public class PowerButtonService extends Service {
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_POWER) {
                     Log.i("Key", "POWER Key pressed");
                     tvContent.setText("POWER Key pressed");
+                    return true;
                 }
 
                 return super.dispatchKeyEvent(event);
@@ -87,11 +99,17 @@ public class PowerButtonService extends Service {
                         | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                 PixelFormat.TRANSLUCENT);
         params.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
+
         wm.addView(mView, params);
+
+
     }
 
     @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
+
+
+
 }
