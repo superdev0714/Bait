@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
-import android.os.PowerManager;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -15,6 +14,8 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import org.w3c.dom.Node;
 
 public class PowerButtonService extends Service {
 
@@ -41,9 +42,6 @@ public class PowerButtonService extends Service {
                     Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
                     sendBroadcast(closeDialog);
 
-//                    PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-//                    PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "tag");
-//                    wl.acquire();
 
                 } else if ("homekey".equals(reason)) {
                     Log.i("Key", "home key pressed");
@@ -53,13 +51,16 @@ public class PowerButtonService extends Service {
                     tvContent.setText("recent apps button clicked");
                 }
             }
+            
 
             @Override
             public boolean dispatchKeyEvent(KeyEvent event) {
 
                 TextView tvContent = (TextView)mView.findViewById(R.id.tvContent);
 
+
                 Log.i("Key", Integer.toString(event.getKeyCode()));
+
 
                 if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
                     Log.i("Key", "Back Key pressed");
@@ -81,6 +82,9 @@ public class PowerButtonService extends Service {
 
                 return super.dispatchKeyEvent(event);
             }
+
+
+
         };
 
         mLinear.setFocusable(true);
@@ -109,6 +113,7 @@ public class PowerButtonService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
+
 
 
 
