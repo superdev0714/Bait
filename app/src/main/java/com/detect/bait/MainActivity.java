@@ -2,24 +2,16 @@ package com.detect.bait;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.admin.DeviceAdminReceiver;
-import android.app.admin.DevicePolicyManager;
-import android.app.job.JobInfo;
-import android.app.job.JobScheduler;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.Settings;
-import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
-import android.view.WindowManager;
+
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class MainActivity extends Activity {
 
@@ -37,27 +29,22 @@ public class MainActivity extends Activity {
             finish();
         } else {
             setContentView(R.layout.activity_main);
-
-            View signIn = (View)findViewById(R.id.rlSingIn);
-            signIn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-
-                    if (checkDrawOverlayPermission()) {
-
-                        SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putBoolean("loggedIn", true);
-                        editor.commit();
-
-                        startService(new Intent(MainActivity.this, PowerButtonService.class));
-                        finish();
-                    }
-                }
-            });
+            ButterKnife.bind(this);
         }
+    }
 
+    @OnClick(R.id.rlSingIn)
+    public void onSignIn(View view) {
+        if (checkDrawOverlayPermission()) {
 
+            SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putBoolean("loggedIn", true);
+            editor.commit();
+
+            startService(new Intent(MainActivity.this, PowerButtonService.class));
+            finish();
+        }
     }
 
 
