@@ -1,7 +1,6 @@
 package com.detect.bait;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.IBinder;
@@ -15,7 +14,6 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import org.w3c.dom.Node;
 
 public class PowerButtonService extends Service {
 

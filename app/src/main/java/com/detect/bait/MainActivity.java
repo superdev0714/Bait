@@ -28,38 +28,34 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
         SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
         boolean loggedIn = sharedPreferences.getBoolean("loggedIn", false);
 
-        View signIn = (View)findViewById(R.id.rlSingIn);
-        signIn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        if (loggedIn) {
+            startService(new Intent(MainActivity.this, PowerButtonService.class));
+            finish();
+        } else {
+            setContentView(R.layout.activity_main);
 
-                if (checkDrawOverlayPermission()) {
+            View signIn = (View)findViewById(R.id.rlSingIn);
+            signIn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
 
-                    SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putBoolean("loggedIn", true);
-                    editor.commit();
+                    if (checkDrawOverlayPermission()) {
 
-                    ComponentName serviceName = new ComponentName(getApplicationContext(), PowerService.class);
-                    JobScheduler jobScheduler = (JobScheduler)getSystemService(JOB_SCHEDULER_SERVICE);
+                        SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putBoolean("loggedIn", true);
+                        editor.commit();
 
-                    JobInfo startMyServiceJobInfo = new JobInfo.Builder(PowerService.JOB_ID, serviceName).setMinimumLatency(100).build();
-                    int result = jobScheduler.schedule(startMyServiceJobInfo);
-
-
-
-                    finish();
-//                    startService(new Intent(MainActivity.this, PowerService.class));
-//                    finish();
+                        startService(new Intent(MainActivity.this, PowerButtonService.class));
+                        finish();
+                    }
                 }
-            }
-        });
-
+            });
+        }
 
 
     }
@@ -127,9 +123,5 @@ public class MainActivity extends Activity {
             e.printStackTrace();
         }
     }
-
-
-    //////////////////////////////
-
 
 }
