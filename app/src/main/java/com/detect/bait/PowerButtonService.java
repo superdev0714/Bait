@@ -18,6 +18,7 @@ import android.widget.TextView;
 public class PowerButtonService extends Service {
 
     View mView;
+    View mBlackView;
     WindowManager wm;
 
     public PowerButtonService() {
@@ -39,6 +40,19 @@ public class PowerButtonService extends Service {
                     tvContent.setText("Long press on power button");
                     Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
                     sendBroadcast(closeDialog);
+
+
+                    WindowManager.LayoutParams param = new WindowManager.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
+                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                                    | WindowManager.LayoutParams.FLAG_FULLSCREEN
+                                    | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                                    | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                            PixelFormat.TRANSLUCENT);
+
+                    wm.updateViewLayout(mView, param);
 
 
                 } else if ("homekey".equals(reason)) {
@@ -94,7 +108,7 @@ public class PowerButtonService extends Service {
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                         | WindowManager.LayoutParams.FLAG_FULLSCREEN
                         | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN

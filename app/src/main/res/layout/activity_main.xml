@@ -15,9 +15,25 @@
         android:layout_marginRight="20dp">
 
         <RelativeLayout
+            android:id="@+id/rlTitle"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:text="Login to Bait App"/>
+        </RelativeLayout>
+
+        <RelativeLayout
             android:id="@+id/rlEmail"
             android:layout_width="match_parent"
-            android:layout_height="50dp">
+            android:layout_height="50dp"
+            android:layout_below="@+id/rlTitle">
 
             <EditText
                 android:id="@+id/etEmail"

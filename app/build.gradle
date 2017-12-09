@@ -3,6 +3,7 @@ apply plugin: 'com.android.application'
 //apply plugin: 'com.android.library'
 //apply plugin: 'com.jakewharton.butterknife'
 
+
 android {
     compileSdkVersion 26
     defaultConfig {
@@ -31,4 +32,8 @@ dependencies {
 
     compile 'com.jakewharton:butterknife:8.8.1'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+
+    compile 'com.google.firebase:firebase-auth:9.2.1'
 }
+
+apply plugin: 'com.google.gms.google-services'
