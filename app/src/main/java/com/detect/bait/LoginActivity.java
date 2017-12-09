@@ -50,6 +50,7 @@ public class LoginActivity extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+
         //getting firebase auth object
         firebaseAuth = FirebaseAuth.getInstance();
 
@@ -67,7 +68,6 @@ public class LoginActivity extends Activity {
             setContentView(R.layout.activity_login);
             ButterKnife.bind(this);
         }
-
 
     }
 
