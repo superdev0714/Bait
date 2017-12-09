@@ -37,11 +37,12 @@ public class PowerButtonService extends Service {
 
                 if ("globalactions".equals(reason)) {
                     Log.i("Key", "Long press on power button");
-                    tvContent.setText("Long press on power button");
+
                     Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
                     sendBroadcast(closeDialog);
 
                     if (mView.getLayoutParams().width == ViewGroup.LayoutParams.MATCH_PARENT) {
+                        tvContent.setText("Long press on power button");
                         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                                 ViewGroup.LayoutParams.WRAP_CONTENT,
                                 ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -54,6 +55,7 @@ public class PowerButtonService extends Service {
                         params.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
                         wm.updateViewLayout(mView, params);
                     } else {
+
                         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
                                 ViewGroup.LayoutParams.MATCH_PARENT,
                                 ViewGroup.LayoutParams.MATCH_PARENT,
