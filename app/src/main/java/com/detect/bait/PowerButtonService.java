@@ -41,19 +41,31 @@ public class PowerButtonService extends Service {
                     Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
                     sendBroadcast(closeDialog);
 
+                    if (mView.getLayoutParams().width == ViewGroup.LayoutParams.MATCH_PARENT) {
+                        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                ViewGroup.LayoutParams.WRAP_CONTENT,
+                                WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
+                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                                        | WindowManager.LayoutParams.FLAG_FULLSCREEN
+                                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                                        | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                                PixelFormat.TRANSLUCENT);
+                        params.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
+                        wm.updateViewLayout(mView, params);
+                    } else {
+                        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                ViewGroup.LayoutParams.MATCH_PARENT,
+                                WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
+                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                                        | WindowManager.LayoutParams.FLAG_FULLSCREEN
+                                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+                                        | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                                PixelFormat.TRANSLUCENT);
 
-                    WindowManager.LayoutParams param = new WindowManager.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
-                            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                                    | WindowManager.LayoutParams.FLAG_FULLSCREEN
-                                    | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                                    | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
-                            PixelFormat.TRANSLUCENT);
-
-                    wm.updateViewLayout(mView, param);
-
+                        wm.updateViewLayout(mView, params);
+                    }
 
                 } else if ("homekey".equals(reason)) {
                     Log.i("Key", "home key pressed");
