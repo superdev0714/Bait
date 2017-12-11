@@ -11,10 +11,14 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ResourceBundle;
+
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 
 /**
@@ -33,6 +37,7 @@ public class TurnOffScreenActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_turnoff);
+        ButterKnife.bind(this);
 
         devicePolicyManager= (DevicePolicyManager)getSystemService(
                 Context.DEVICE_POLICY_SERVICE);
@@ -52,14 +57,25 @@ public class TurnOffScreenActivity extends Activity {
         startActivityForResult(intent, RESULT_ENABLE);
     }
 
+    @OnClick(R.id.poweroff_view)
+    public void onPowerOff(View view) {
+        finish();
+        devicePolicyManager.lockNow();
+    }
+
+    @OnClick(R.id.restart_view)
+    public void onRestart(View view) {
+        finish();
+        devicePolicyManager.lockNow();
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case RESULT_ENABLE:
                 if (resultCode == Activity.RESULT_OK) {
-                    finish();
-                    devicePolicyManager.lockNow();
+                    Log.e("poweroff", "enabled!");
                 } else {
                     Toast.makeText(this, "Failed!", Toast.LENGTH_SHORT).show();
                 }

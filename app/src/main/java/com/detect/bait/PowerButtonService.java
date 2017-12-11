@@ -104,7 +104,6 @@ public class PowerButtonService extends Service {
                 }
             }
 
-
         };
 
         mLinear.setFocusable(true);
