@@ -2,14 +2,18 @@ package com.detect.bait;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.EditText;
@@ -29,7 +33,7 @@ import butterknife.OnClick;
  * Created by lucas on 12/9/17.
  */
 
-public class LoginActivity extends Activity {
+public class LoginActivity extends Activity implements ServiceCallback {
 
     public final static int REQUEST_CODE = 10101;
 
@@ -43,12 +47,15 @@ public class LoginActivity extends Activity {
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
 
+    private PowerButtonService myService;
+    private boolean bound = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        setContentView(R.layout.activity_login);
+        ButterKnife.bind(this);
 
 
         //getting firebase auth object
@@ -58,18 +65,45 @@ public class LoginActivity extends Activity {
         //means user is already logged in
         if(firebaseAuth.getCurrentUser() != null){
 
-            //opening profile activity
-            startService(new Intent(LoginActivity.this, PowerButtonService.class));
+            Intent intent = new Intent(LoginActivity.this, PowerButtonService.class);
+            startService(intent);
+//            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
 
-            //close this activity
+            // hide activity
             finish();
 
-        } else {
-            setContentView(R.layout.activity_login);
-            ButterKnife.bind(this);
         }
 
     }
+
+
+    /** Callbacks for service binding, passed to bindService() */
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            // cast the IBinder and get MyService instance
+            PowerButtonService.LocalBinder binder = (PowerButtonService.LocalBinder) service;
+            myService = binder.getService();
+            bound = true;
+            myService.setCallbacks(LoginActivity.this); // register
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            bound = false;
+        }
+    };
+
+    /* Defined by ServiceCallbacks interface */
+    @Override
+    public void turnOffScreen() {
+        Log.e("Test", "TESTWDSAFDSAFDSAFSA");
+
+        setContentView(R.layout.activity_login);
+        ButterKnife.bind(this);
+    }
+
 
     @OnClick(R.id.btn_login)
     public void onSignIn(View view) {
@@ -171,4 +205,5 @@ public class LoginActivity extends Activity {
             sendBroadcast(closeDialog);
         }
     }
+
 }

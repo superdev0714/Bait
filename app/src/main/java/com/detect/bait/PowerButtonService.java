@@ -1,10 +1,17 @@
 package com.detect.bait;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.PixelFormat;
+import android.location.Location;
+import android.location.LocationManager;
+import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -21,12 +28,56 @@ public class PowerButtonService extends Service {
     View mView;
     WindowManager wm;
 
-    public PowerButtonService() {
+    private boolean isPowerOff = false;
+
+    private static final String Location_TAG = "MyLocationService";
+    private static final String Key_TAG = "Key";
+
+
+    private LocationManager mLocationManager = null;
+    private static final int LOCATION_INTERVAL = 1000;
+    private static final float LOCATION_DISTANCE = 10f;
+
+    // Binder given to clients
+    private final IBinder binder = new LocalBinder();
+    // Registered callbacks
+    private ServiceCallback serviceCallback;
+
+    // Class used for the client Binder.
+    public class LocalBinder extends Binder {
+        PowerButtonService getService() {
+            // Return this instance of MyService so clients can call public methods
+            return PowerButtonService.this;
+        }
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        initializeLocationManager();
+
+        try {
+            mLocationManager.requestLocationUpdates(
+                    LocationManager.PASSIVE_PROVIDER,
+                    LOCATION_INTERVAL,
+                    LOCATION_DISTANCE,
+                    mLocationListeners[0]
+            );
+        } catch (java.lang.SecurityException ex) {
+            Log.i(Location_TAG, "fail to request location update, ignore", ex);
+        } catch (IllegalArgumentException ex) {
+            Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
+        }
+
+        detectPowerKeys();
+
+
+    }
+
+    public void detectPowerKeys() {
+
+
 
         final LinearLayout mLinear = new LinearLayout(getApplicationContext()) {
 
@@ -34,81 +85,65 @@ public class PowerButtonService extends Service {
             public void onCloseSystemDialogs(String reason) {
 
                 TextView tvContent = (TextView)mView.findViewById(R.id.tvContent);
+                Log.i(Key_TAG, reason);
 
                 if ("globalactions".equals(reason)) {
-                    Log.i("Key", "Long press on power button");
+                    Log.i(Key_TAG, "Long press on power button");
+
+                    isPowerOff = !isPowerOff;
 
                     Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
                     sendBroadcast(closeDialog);
 
-                    if (mView.getLayoutParams().width == ViewGroup.LayoutParams.MATCH_PARENT) {
-//                        tvContent.setText("Long press on power button");
-                        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
-                                ViewGroup.LayoutParams.WRAP_CONTENT,
-                                WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                                        | WindowManager.LayoutParams.FLAG_FULLSCREEN
-                                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                                        | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
-                                PixelFormat.TRANSLUCENT);
-                        params.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
-                        wm.updateViewLayout(mView, params);
-
-                        restoreScreenOffTimeOut();
+                    if (isPowerOff) {
+                        Intent intent = new Intent(getContext(), TurnOffScreenActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
                     } else {
-                        tvContent.setText("");
-
-                        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                ViewGroup.LayoutParams.MATCH_PARENT,
-                                WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
-                                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                                        | WindowManager.LayoutParams.FLAG_FULLSCREEN
-                                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                                        | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
-                                PixelFormat.TRANSLUCENT);
-
-                        wm.updateViewLayout(mView, params);
-
-                        setScreenOffTimeOut();
-
+                        Intent intent = new Intent();
+                        intent.setAction("turnOn");
+                        intent.putExtra("poweroff", isPowerOff);
+                        sendBroadcast(intent);
                     }
 
                 } else if ("homekey".equals(reason)) {
                     Log.i("Key", "home key pressed");
+                    tvContent.setText("home key pressed");
                 } else if ("recentapps".equals(reason)) {
                     Log.i("Key", "recent apps button clicked");
+                    tvContent.setText("recent apps button pressed");
                 }
             }
-            
+
 
             @Override
             public boolean dispatchKeyEvent(KeyEvent event) {
 
                 TextView tvContent = (TextView)mView.findViewById(R.id.tvContent);
 
-
-                Log.i("Key", Integer.toString(event.getKeyCode()));
+                Log.i(Key_TAG, Integer.toString(event.getKeyCode()));
 
 
                 if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
-                    Log.i("Key", "Back Key pressed");
+                    Log.i(Key_TAG, "Back Key pressed");
+                    tvContent.setText("Back Key pressed");
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
-                    Log.i("Key", "Volume Up Key pressed");
+                    Log.i(Key_TAG, "Volume Up Key pressed");
+                    tvContent.setText("Volume Up Key pressed");
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
-                    Log.i("Key", "Volume Down Key pressed");
+                    Log.i(Key_TAG, "Volume Down Key pressed");
+                    tvContent.setText("Volume Down Key pressed");
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_CAMERA) {
-                    Log.i("Key", "Camera Key pressed");
+                    Log.i(Key_TAG, "Camera Key pressed");
+                    tvContent.setText("Camera Key pressed");
                 } else if (event.getKeyCode() == KeyEvent.KEYCODE_POWER) {
-                    Log.i("Key", "POWER Key pressed");
+                    Log.i(Key_TAG, "POWER Key pressed");
+                    tvContent.setText("POWER Key pressed");
                     return true;
                 }
 
                 return super.dispatchKeyEvent(event);
             }
-
-
 
         };
 
@@ -127,18 +162,41 @@ public class PowerButtonService extends Service {
                         | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
                         | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                 PixelFormat.TRANSLUCENT);
-        params.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
 
         wm.addView(mView, params);
 
-
     }
+
+
+    @Override
+    public void onDestroy() {
+        Log.e(Location_TAG, "onDestroy");
+        super.onDestroy();
+        if (mLocationManager != null) {
+            for (int i = 0; i < mLocationListeners.length; i++) {
+                try {
+                    if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                        return;
+                    }
+                    mLocationManager.removeUpdates(mLocationListeners[i]);
+                } catch (Exception ex) {
+                    Log.i(Location_TAG, "fail to remove location listener, ignore", ex);
+                }
+            }
+        }
+    }
+
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return binder;
     }
 
+    public void setCallbacks(ServiceCallback callback) {
+        serviceCallback = callback;
+    }
+
+    ////// Set screen off timeout
     private static final int SCREEN_OFF_TIME_OUT = 500;
     private int mSystemScreenOffTimeOut;
     private void setScreenOffTimeOut() {
@@ -159,5 +217,62 @@ public class PowerButtonService extends Service {
         }
     }
 
+
+    ////// location service
+
+    private class LocationListener implements android.location.LocationListener {
+        Location mLastLocation;
+
+        public LocationListener(String provider) {
+            Log.e(Location_TAG, "LocationListener " + provider);
+            mLastLocation = new Location(provider);
+        }
+
+        @Override
+        public void onLocationChanged(Location location) {
+            Log.e(Location_TAG, "onLocationChanged: " + location);
+            mLastLocation.set(location);
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+            Log.e(Location_TAG, "onProviderDisabled: " + provider);
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+            Log.e(Location_TAG, "onProviderEnabled: " + provider);
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+            Log.e(Location_TAG, "onStatusChanged: " + provider);
+        }
+    }
+
+    /*
+    LocationListener[] mLocationListeners = new LocationListener[]{
+            new LocationListener(LocationManager.GPS_PROVIDER),
+            new LocationListener(LocationManager.NETWORK_PROVIDER)
+    };
+    */
+
+    LocationListener[] mLocationListeners = new LocationListener[]{
+            new LocationListener(LocationManager.PASSIVE_PROVIDER)
+    };
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.e(Location_TAG, "onStartCommand");
+        super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
+    }
+
+    private void initializeLocationManager() {
+        Log.e(Location_TAG, "initializeLocationManager - LOCATION_INTERVAL: "+ LOCATION_INTERVAL + " LOCATION_DISTANCE: " + LOCATION_DISTANCE);
+        if (mLocationManager == null) {
+            mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        }
+    }
 
 }
