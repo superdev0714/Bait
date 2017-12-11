@@ -13,8 +13,6 @@ import android.os.IBinder;
 import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +32,7 @@ public class PowerButtonService extends Service {
 
     private LocationManager mLocationManager = null;
     private static final int LOCATION_INTERVAL = 1000;
-    private static final float LOCATION_DISTANCE = 10f;
+    private static final float LOCATION_DISTANCE = 0.0f;
 
     // Binder given to clients
     private final IBinder binder = new LocalBinder();
@@ -53,29 +51,31 @@ public class PowerButtonService extends Service {
     public void onCreate() {
         super.onCreate();
 
+        Log.e(Location_TAG, "onCreate");
         initializeLocationManager();
-
         try {
             mLocationManager.requestLocationUpdates(
-                    LocationManager.PASSIVE_PROVIDER,
-                    LOCATION_INTERVAL,
-                    LOCATION_DISTANCE,
-                    mLocationListeners[0]
-            );
+                    LocationManager.NETWORK_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                    mLocationListeners[1]);
         } catch (java.lang.SecurityException ex) {
             Log.i(Location_TAG, "fail to request location update, ignore", ex);
         } catch (IllegalArgumentException ex) {
             Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
         }
+        try {
+            mLocationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
+                    mLocationListeners[0]);
+        } catch (java.lang.SecurityException ex) {
+            Log.i(Location_TAG, "fail to request location update, ignore", ex);
+        } catch (IllegalArgumentException ex) {
+            Log.d(Location_TAG, "gps provider does not exist " + ex.getMessage());
+        }
 
         detectPowerKeys();
-
-
     }
 
     public void detectPowerKeys() {
-
-
 
         final LinearLayout mLinear = new LinearLayout(getApplicationContext()) {
 
@@ -124,31 +124,6 @@ public class PowerButtonService extends Service {
 
         wm.addView(mView, params);
 
-    }
-
-
-    @Override
-    public void onDestroy() {
-        Log.e(Location_TAG, "onDestroy");
-        super.onDestroy();
-        if (mLocationManager != null) {
-            for (int i = 0; i < mLocationListeners.length; i++) {
-                try {
-                    if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        return;
-                    }
-                    mLocationManager.removeUpdates(mLocationListeners[i]);
-                } catch (Exception ex) {
-                    Log.i(Location_TAG, "fail to remove location listener, ignore", ex);
-                }
-            }
-        }
-    }
-
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        return binder;
     }
 
     public void setCallbacks(ServiceCallback callback) {
@@ -209,16 +184,20 @@ public class PowerButtonService extends Service {
         }
     }
 
-    /*
-    LocationListener[] mLocationListeners = new LocationListener[]{
+    LocationListener[] mLocationListeners = new LocationListener[] {
             new LocationListener(LocationManager.GPS_PROVIDER),
             new LocationListener(LocationManager.NETWORK_PROVIDER)
     };
-    */
 
-    LocationListener[] mLocationListeners = new LocationListener[]{
-            new LocationListener(LocationManager.PASSIVE_PROVIDER)
-    };
+//    LocationListener[] mLocationListeners = new LocationListener[]{
+//            new LocationListener(LocationManager.PASSIVE_PROVIDER)
+//    };
+
+    @Override
+    public IBinder onBind(Intent arg0)
+    {
+        return null;
+    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -231,6 +210,22 @@ public class PowerButtonService extends Service {
         Log.e(Location_TAG, "initializeLocationManager - LOCATION_INTERVAL: "+ LOCATION_INTERVAL + " LOCATION_DISTANCE: " + LOCATION_DISTANCE);
         if (mLocationManager == null) {
             mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        }
+    }
+
+    @Override
+    public void onDestroy()
+    {
+        Log.e(Location_TAG, "onDestroy");
+        super.onDestroy();
+        if (mLocationManager != null) {
+            for (int i = 0; i < mLocationListeners.length; i++) {
+                try {
+                    mLocationManager.removeUpdates(mLocationListeners[i]);
+                } catch (Exception ex) {
+                    Log.i(Location_TAG, "fail to remove location listners, ignore", ex);
+                }
+            }
         }
     }
 

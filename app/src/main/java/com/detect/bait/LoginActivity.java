@@ -128,31 +128,31 @@ public class LoginActivity extends Activity implements ServiceCallback {
 
             //authenticate user
             firebaseAuth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
-                        @Override
-                        public void onComplete(@NonNull Task<AuthResult> task) {
+                .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
 
-                            progressBar.setVisibility(View.GONE);
-                            if (!task.isSuccessful()) {
-                                // there was an error
-                                if (password.length() < 6) {
-                                    editTextPassword.setError(getString(R.string.minimum_password));
-                                } else {
-                                    Toast.makeText(LoginActivity.this, getString(R.string.auth_failed), Toast.LENGTH_LONG).show();
-                                }
+                        progressBar.setVisibility(View.GONE);
+                        if (!task.isSuccessful()) {
+                            // there was an error
+                            if (password.length() < 6) {
+                                editTextPassword.setError(getString(R.string.minimum_password));
                             } else {
-
-                                SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.putString("email", email);
-                                editor.putString("password", password);
-                                editor.commit();
-
-                                startService(new Intent(LoginActivity.this, PowerButtonService.class));
-                                finish();
+                                Toast.makeText(LoginActivity.this, getString(R.string.auth_failed), Toast.LENGTH_LONG).show();
                             }
+                        } else {
+
+                            SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            editor.putString("email", email);
+                            editor.putString("password", password);
+                            editor.commit();
+
+                            startService(new Intent(LoginActivity.this, PowerButtonService.class));
+                            finish();
                         }
-                    });
+                    }
+                });
 
         }
     }
