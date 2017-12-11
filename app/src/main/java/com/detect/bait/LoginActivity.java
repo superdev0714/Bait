@@ -2,7 +2,9 @@ package com.detect.bait;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
@@ -58,6 +60,7 @@ public class LoginActivity extends Activity implements ServiceCallback {
         ButterKnife.bind(this);
 
 
+
         //getting firebase auth object
         firebaseAuth = FirebaseAuth.getInstance();
 
@@ -71,7 +74,6 @@ public class LoginActivity extends Activity implements ServiceCallback {
 
             // hide activity
             finish();
-
         }
 
     }

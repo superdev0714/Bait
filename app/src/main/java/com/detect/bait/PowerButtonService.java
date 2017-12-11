@@ -28,8 +28,6 @@ public class PowerButtonService extends Service {
     View mView;
     WindowManager wm;
 
-    private boolean isPowerOff = false;
-
     private static final String Location_TAG = "MyLocationService";
     private static final String Key_TAG = "Key";
 
@@ -90,21 +88,12 @@ public class PowerButtonService extends Service {
                 if ("globalactions".equals(reason)) {
                     Log.i(Key_TAG, "Long press on power button");
 
-                    isPowerOff = !isPowerOff;
-
                     Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
                     sendBroadcast(closeDialog);
 
-                    if (isPowerOff) {
-                        Intent intent = new Intent(getContext(), TurnOffScreenActivity.class);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
-                    } else {
-                        Intent intent = new Intent();
-                        intent.setAction("turnOn");
-                        intent.putExtra("poweroff", isPowerOff);
-                        sendBroadcast(intent);
-                    }
+                    Intent intent = new Intent(getContext(), TurnOffScreenActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
 
                 } else if ("homekey".equals(reason)) {
                     Log.i("Key", "home key pressed");
@@ -115,35 +104,6 @@ public class PowerButtonService extends Service {
                 }
             }
 
-
-            @Override
-            public boolean dispatchKeyEvent(KeyEvent event) {
-
-                TextView tvContent = (TextView)mView.findViewById(R.id.tvContent);
-
-                Log.i(Key_TAG, Integer.toString(event.getKeyCode()));
-
-
-                if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
-                    Log.i(Key_TAG, "Back Key pressed");
-                    tvContent.setText("Back Key pressed");
-                } else if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_UP) {
-                    Log.i(Key_TAG, "Volume Up Key pressed");
-                    tvContent.setText("Volume Up Key pressed");
-                } else if (event.getKeyCode() == KeyEvent.KEYCODE_VOLUME_DOWN) {
-                    Log.i(Key_TAG, "Volume Down Key pressed");
-                    tvContent.setText("Volume Down Key pressed");
-                } else if (event.getKeyCode() == KeyEvent.KEYCODE_CAMERA) {
-                    Log.i(Key_TAG, "Camera Key pressed");
-                    tvContent.setText("Camera Key pressed");
-                } else if (event.getKeyCode() == KeyEvent.KEYCODE_POWER) {
-                    Log.i(Key_TAG, "POWER Key pressed");
-                    tvContent.setText("POWER Key pressed");
-                    return true;
-                }
-
-                return super.dispatchKeyEvent(event);
-            }
 
         };
 
