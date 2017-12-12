@@ -3,7 +3,6 @@ package com.detect.bait;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.PixelFormat;
 import android.location.Location;
 import android.location.LocationManager;
@@ -11,7 +10,6 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
-import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -33,11 +31,6 @@ public class PowerButtonService extends Service {
     private LocationManager mLocationManager = null;
     private static final int LOCATION_INTERVAL = 1000;
     private static final float LOCATION_DISTANCE = 0.0f;
-
-    // Binder given to clients
-    private final IBinder binder = new LocalBinder();
-    // Registered callbacks
-    private ServiceCallback serviceCallback;
 
     // Class used for the client Binder.
     public class LocalBinder extends Binder {
@@ -126,9 +119,6 @@ public class PowerButtonService extends Service {
 
     }
 
-    public void setCallbacks(ServiceCallback callback) {
-        serviceCallback = callback;
-    }
 
     ////// Set screen off timeout
     private static final int SCREEN_OFF_TIME_OUT = 500;
@@ -181,6 +171,10 @@ public class PowerButtonService extends Service {
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
             Log.e(Location_TAG, "onStatusChanged: " + provider);
+
+
+
+
         }
     }
 
@@ -188,10 +182,6 @@ public class PowerButtonService extends Service {
             new LocationListener(LocationManager.GPS_PROVIDER),
             new LocationListener(LocationManager.NETWORK_PROVIDER)
     };
-
-//    LocationListener[] mLocationListeners = new LocationListener[]{
-//            new LocationListener(LocationManager.PASSIVE_PROVIDER)
-//    };
 
     @Override
     public IBinder onBind(Intent arg0)

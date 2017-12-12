@@ -2,30 +2,38 @@ package com.detect.bait;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.admin.DevicePolicyManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -35,9 +43,11 @@ import butterknife.OnClick;
  * Created by lucas on 12/9/17.
  */
 
-public class LoginActivity extends Activity implements ServiceCallback {
+public class LoginActivity extends Activity {
 
     public final static int REQUEST_CODE = 10101;
+    public final static int REQUEST_CHECK_SETTINGS = 0x1;
+
 
     //firebase auth object
     private FirebaseAuth firebaseAuth;
@@ -49,9 +59,6 @@ public class LoginActivity extends Activity implements ServiceCallback {
     @BindView(R.id.progressBar)
     ProgressBar progressBar;
 
-    private PowerButtonService myService;
-    private boolean bound = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,6 +67,7 @@ public class LoginActivity extends Activity implements ServiceCallback {
         ButterKnife.bind(this);
 
 
+        displayLocationSettingsRequest(this);
 
         //getting firebase auth object
         firebaseAuth = FirebaseAuth.getInstance();
@@ -68,42 +76,26 @@ public class LoginActivity extends Activity implements ServiceCallback {
         //means user is already logged in
         if(firebaseAuth.getCurrentUser() != null){
 
-            Intent intent = new Intent(LoginActivity.this, PowerButtonService.class);
-            startService(intent);
-//            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE);
+            FirebaseUser user = firebaseAuth.getCurrentUser();
 
-            // hide activity
-            finish();
+            SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+            String email = sharedPreferences.getString("email", "");
+            String password = sharedPreferences.getString("password", "");
+
+            AuthCredential credential = EmailAuthProvider
+                    .getCredential(email, password);
+            user.reauthenticate(credential).addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    Intent intent = new Intent(LoginActivity.this, PowerButtonService.class);
+                    startService(intent);
+
+                    // hide activity
+                    finish();
+                }
+            });
         }
 
-    }
-
-
-    /** Callbacks for service binding, passed to bindService() */
-    private ServiceConnection serviceConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            // cast the IBinder and get MyService instance
-            PowerButtonService.LocalBinder binder = (PowerButtonService.LocalBinder) service;
-            myService = binder.getService();
-            bound = true;
-            myService.setCallbacks(LoginActivity.this); // register
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            bound = false;
-        }
-    };
-
-    /* Defined by ServiceCallbacks interface */
-    @Override
-    public void turnOffScreen() {
-        Log.e("Test", "TESTWDSAFDSAFDSAFSA");
-
-        setContentView(R.layout.activity_login);
-        ButterKnife.bind(this);
     }
 
 
@@ -206,6 +198,48 @@ public class LoginActivity extends Activity implements ServiceCallback {
             Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
             sendBroadcast(closeDialog);
         }
+    }
+
+
+    private void displayLocationSettingsRequest(Context context) {
+        GoogleApiClient googleApiClient = new GoogleApiClient.Builder(context)
+                .addApi(LocationServices.API).build();
+        googleApiClient.connect();
+
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(10000 / 2);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
+        builder.setAlwaysShow(true);
+
+        PendingResult<LocationSettingsResult> result = LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult result) {
+                final Status status = result.getStatus();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        Log.i("MyDeviceLocation", "All location settings are satisfied.");
+                        break;
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        Log.i("MyDeviceLocation", "Location settings are not satisfied. Show the user a dialog to upgrade location settings ");
+
+                        try {
+                            // Show the dialog by calling startResolutionForResult(), and check the result
+                            // in onActivityResult().
+                            status.startResolutionForResult(LoginActivity.this, REQUEST_CHECK_SETTINGS);
+                        } catch (IntentSender.SendIntentException e) {
+                            Log.i("MyDeviceLocation", "PendingIntent unable to execute request.");
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        Log.i("MyDeviceLocation", "Location settings are inadequate, and cannot be fixed here. Dialog not created.");
+                        break;
+                }
+            }
+        });
     }
 
 }
