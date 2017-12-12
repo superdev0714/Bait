@@ -68,7 +68,6 @@ public class LoginActivity extends Activity {
         //getting firebase auth object
         firebaseAuth = FirebaseAuth.getInstance();
 
-        firebaseAuth.signOut();
         //if the objects getcurrentuser method is not null
         //means user is already logged in
         if(firebaseAuth.getCurrentUser() != null){
@@ -190,8 +189,8 @@ public class LoginActivity extends Activity {
 
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(10000 / 2);
+        locationRequest.setInterval(1000);
+        locationRequest.setFastestInterval(1000 / 2);
 
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
         builder.setAlwaysShow(true);
