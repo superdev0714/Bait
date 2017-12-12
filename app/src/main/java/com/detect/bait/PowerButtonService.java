@@ -3,10 +3,11 @@ package com.detect.bait;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.PixelFormat;
 import android.location.Location;
 import android.location.LocationManager;
-import android.os.Binder;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
@@ -16,54 +17,74 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
-import android.widget.TextView;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class PowerButtonService extends Service {
 
     View mView;
-    WindowManager wm;
+
+    private float mBatteryLevel = 0.0f;
 
     private static final String Location_TAG = "MyLocationService";
-    private static final String Key_TAG = "Key";
-
+    private static final String Key_TAG = "Keyguard";
 
     private LocationManager mLocationManager = null;
-    private static final int LOCATION_INTERVAL = 1000;
+    private long location_interval = 30 * 60 * 1000; // 30 mins
     private static final float LOCATION_DISTANCE = 0.0f;
 
-    // Class used for the client Binder.
-    public class LocalBinder extends Binder {
-        PowerButtonService getService() {
-            // Return this instance of MyService so clients can call public methods
-            return PowerButtonService.this;
-        }
-    }
+    //firebase auth object
+    private FirebaseAuth firebaseAuth;
+
+    private DatabaseReference mDatabase;
+
 
     @Override
     public void onCreate() {
         super.onCreate();
 
         Log.e(Location_TAG, "onCreate");
-        initializeLocationManager();
-        try {
-            mLocationManager.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
-                    mLocationListeners[1]);
-        } catch (java.lang.SecurityException ex) {
-            Log.i(Location_TAG, "fail to request location update, ignore", ex);
-        } catch (IllegalArgumentException ex) {
-            Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
-        }
-        try {
-            mLocationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER, LOCATION_INTERVAL, LOCATION_DISTANCE,
-                    mLocationListeners[0]);
-        } catch (java.lang.SecurityException ex) {
-            Log.i(Location_TAG, "fail to request location update, ignore", ex);
-        } catch (IllegalArgumentException ex) {
-            Log.d(Location_TAG, "gps provider does not exist " + ex.getMessage());
-        }
+
+        mBatteryLevel = getBatteryLevel();
+
+        firebaseAuth = FirebaseAuth.getInstance();
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        String email = user.getEmail();
+        String userId = user.getUid();
+        String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+        mDatabase = databaseReference.child("users").child(userId).child(device_id);
+
+        mDatabase.child("interval").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                location_interval = (long)dataSnapshot.getValue() * 1000;
+
+                // start location track with time interval
+                initializeLocationManager();
+                removeLocationListeners();
+                startLocationTrack();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
         detectPowerKeys();
     }
@@ -75,7 +96,6 @@ public class PowerButtonService extends Service {
             //home or recent button
             public void onCloseSystemDialogs(String reason) {
 
-                TextView tvContent = (TextView)mView.findViewById(R.id.tvContent);
                 Log.i(Key_TAG, reason);
 
                 if ("globalactions".equals(reason)) {
@@ -90,10 +110,8 @@ public class PowerButtonService extends Service {
 
                 } else if ("homekey".equals(reason)) {
                     Log.i("Key", "home key pressed");
-                    tvContent.setText("home key pressed");
                 } else if ("recentapps".equals(reason)) {
                     Log.i("Key", "recent apps button clicked");
-                    tvContent.setText("recent apps button pressed");
                 }
             }
 
@@ -102,7 +120,7 @@ public class PowerButtonService extends Service {
         mLinear.setFocusable(true);
 
         mView = LayoutInflater.from(this).inflate(R.layout.service_layout, mLinear);
-        wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+        WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
 
         //params
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
@@ -120,29 +138,65 @@ public class PowerButtonService extends Service {
     }
 
 
-    ////// Set screen off timeout
-    private static final int SCREEN_OFF_TIME_OUT = 500;
-    private int mSystemScreenOffTimeOut;
-    private void setScreenOffTimeOut() {
-        try {
-            mSystemScreenOffTimeOut = Settings.System.getInt(getContentResolver(), Settings.System.SCREEN_OFF_TIMEOUT);
-            Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_OFF_TIMEOUT, SCREEN_OFF_TIME_OUT);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void restoreScreenOffTimeOut() {
-        if (mSystemScreenOffTimeOut == 0) return;
-        try {
-            Settings.System.putInt(getContentResolver(), Settings.System.SCREEN_OFF_TIMEOUT, mSystemScreenOffTimeOut);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
     ////// location service
+
+    private void startLocationTrack() {
+
+        try {
+            mLocationManager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER, location_interval, LOCATION_DISTANCE,
+                    mLocationListeners[1]);
+        } catch (java.lang.SecurityException ex) {
+            Log.i(Location_TAG, "fail to request location update, ignore", ex);
+        } catch (IllegalArgumentException ex) {
+            Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
+        }
+        try {
+            mLocationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER, location_interval, LOCATION_DISTANCE,
+                    mLocationListeners[0]);
+        } catch (java.lang.SecurityException ex) {
+            Log.i(Location_TAG, "fail to request location update, ignore", ex);
+        } catch (IllegalArgumentException ex) {
+            Log.d(Location_TAG, "gps provider does not exist " + ex.getMessage());
+        }
+    }
+
+    private void uploadLocationData(Location location) {
+
+        DatabaseReference databaseReference = mDatabase.child("locations").push();
+
+        Date time = new Date(location.getTime());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMddkkmmss");
+        String strTime = dateFormat.format(time);
+
+        Map<String, Object> locationMap = new HashMap<>();
+        locationMap.put("latitude", location.getLatitude());
+        locationMap.put("longitude", location.getLongitude());
+        locationMap.put("time", strTime);
+        locationMap.put("battery", mBatteryLevel);
+
+        databaseReference.updateChildren(locationMap);
+
+
+        float battery = getBatteryLevel();
+        Log.e("BatteryLevel", Float.toString(battery));
+
+    }
+
+
+    private float getBatteryLevel() {
+        Intent batteryIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+        int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+
+        // Error checking that probably isn't needed but I added just in case.
+        if(level == -1 || scale == -1) {
+            return 50.0f;
+        }
+
+        return ((float)level / (float)scale) * 100.0f;
+    }
 
     private class LocationListener implements android.location.LocationListener {
         Location mLastLocation;
@@ -150,12 +204,16 @@ public class PowerButtonService extends Service {
         public LocationListener(String provider) {
             Log.e(Location_TAG, "LocationListener " + provider);
             mLastLocation = new Location(provider);
+
         }
 
         @Override
         public void onLocationChanged(Location location) {
             Log.e(Location_TAG, "onLocationChanged: " + location);
             mLastLocation.set(location);
+
+            mBatteryLevel = getBatteryLevel();
+            uploadLocationData(mLastLocation);
         }
 
         @Override
@@ -172,11 +230,10 @@ public class PowerButtonService extends Service {
         public void onStatusChanged(String provider, int status, Bundle extras) {
             Log.e(Location_TAG, "onStatusChanged: " + provider);
 
-
-
-
         }
     }
+
+
 
     LocationListener[] mLocationListeners = new LocationListener[] {
             new LocationListener(LocationManager.GPS_PROVIDER),
@@ -197,17 +254,13 @@ public class PowerButtonService extends Service {
     }
 
     private void initializeLocationManager() {
-        Log.e(Location_TAG, "initializeLocationManager - LOCATION_INTERVAL: "+ LOCATION_INTERVAL + " LOCATION_DISTANCE: " + LOCATION_DISTANCE);
+        Log.e(Location_TAG, "initializeLocationManager - LOCATION_INTERVAL: "+ location_interval + " LOCATION_DISTANCE: " + LOCATION_DISTANCE);
         if (mLocationManager == null) {
             mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         }
     }
 
-    @Override
-    public void onDestroy()
-    {
-        Log.e(Location_TAG, "onDestroy");
-        super.onDestroy();
+    private void removeLocationListeners() {
         if (mLocationManager != null) {
             for (int i = 0; i < mLocationListeners.length; i++) {
                 try {
@@ -217,6 +270,13 @@ public class PowerButtonService extends Service {
                 }
             }
         }
+    }
+    @Override
+    public void onDestroy()
+    {
+        Log.e(Location_TAG, "onDestroy");
+        super.onDestroy();
+        removeLocationListeners();
     }
 
 }

@@ -3,6 +3,7 @@ package com.detect.bait;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.view.View;
@@ -14,6 +15,9 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.UserInfo;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -78,13 +82,27 @@ public class RegisterActivity extends Activity {
             .addOnCompleteListener(RegisterActivity.this, new OnCompleteListener<AuthResult>() {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
-                    Toast.makeText(RegisterActivity.this, "createUserWithEmail:onComplete:" + task.isSuccessful(), Toast.LENGTH_SHORT).show();
+
                     progressBar.setVisibility(View.GONE);
 
                     if (!task.isSuccessful()) {
                         Toast.makeText(RegisterActivity.this, "Authentication failed." + task.getException(),
                                 Toast.LENGTH_SHORT).show();
                     } else {
+                        Toast.makeText(RegisterActivity.this, "You are registered successfully", Toast.LENGTH_SHORT).show();
+
+                        String email = firebaseAuth.getCurrentUser().getEmail();
+                        String userId = firebaseAuth.getCurrentUser().getUid();
+                        int initialInterval = 10 * 60;  // 10 mins
+                        String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
+                                Settings.Secure.ANDROID_ID);
+
+                        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+                        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+                        DatabaseReference userDatabase = mDatabase.child("users").child(userId);
+
+                        userDatabase.child("email").setValue(email);
+                        userDatabase.child(device_id).child("interval").setValue(initialInterval);
 
                         Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);
                         startActivity(intent);

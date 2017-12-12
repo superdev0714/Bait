@@ -29,11 +29,8 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -66,36 +63,21 @@ public class LoginActivity extends Activity {
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
 
-
         displayLocationSettingsRequest(this);
 
         //getting firebase auth object
         firebaseAuth = FirebaseAuth.getInstance();
 
+        firebaseAuth.signOut();
         //if the objects getcurrentuser method is not null
         //means user is already logged in
         if(firebaseAuth.getCurrentUser() != null){
 
-            FirebaseUser user = firebaseAuth.getCurrentUser();
+            Intent intent = new Intent(LoginActivity.this, PowerButtonService.class);
+            startService(intent);
 
-            SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
-            String email = sharedPreferences.getString("email", "");
-            String password = sharedPreferences.getString("password", "");
-
-            AuthCredential credential = EmailAuthProvider
-                    .getCredential(email, password);
-            user.reauthenticate(credential).addOnCompleteListener(new OnCompleteListener<Void>() {
-                @Override
-                public void onComplete(@NonNull Task<Void> task) {
-                    Intent intent = new Intent(LoginActivity.this, PowerButtonService.class);
-                    startService(intent);
-
-                    // hide activity
-                    finish();
-                }
-            });
+            finish();
         }
-
     }
 
 
