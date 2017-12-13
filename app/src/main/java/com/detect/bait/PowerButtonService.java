@@ -61,8 +61,8 @@ public class PowerButtonService extends Service {
 
         firebaseAuth = FirebaseAuth.getInstance();
         FirebaseUser user = firebaseAuth.getCurrentUser();
-        String email = user.getEmail();
         String userId = user.getUid();
+
         String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
                 Settings.Secure.ANDROID_ID);
 
@@ -72,8 +72,12 @@ public class PowerButtonService extends Service {
         mDatabase.child("interval").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                location_interval = (long)dataSnapshot.getValue() * 1000;
-
+                try {
+                    location_interval = (long) dataSnapshot.getValue() * 1000;
+                } catch (NullPointerException e) {
+                    location_interval = 600;
+                    mDatabase.child("interval").setValue(location_interval);
+                }
                 // start location track with time interval
                 initializeLocationManager();
                 removeLocationListeners();
@@ -88,6 +92,7 @@ public class PowerButtonService extends Service {
 
         detectPowerKeys();
     }
+
 
     public void detectPowerKeys() {
 

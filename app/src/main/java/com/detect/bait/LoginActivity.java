@@ -28,9 +28,12 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -67,16 +70,32 @@ public class LoginActivity extends Activity {
 
         //getting firebase auth object
         firebaseAuth = FirebaseAuth.getInstance();
-//        firebaseAuth.signOut();
+
         //if the objects getcurrentuser method is not null
         //means user is already logged in
         if(firebaseAuth.getCurrentUser() != null){
 
+            setInitialInterval();
             Intent intent = new Intent(LoginActivity.this, PowerButtonService.class);
             startService(intent);
 
             finish();
         }
+    }
+
+    private void setInitialInterval() {
+        String email = firebaseAuth.getCurrentUser().getEmail();
+        String userId = firebaseAuth.getCurrentUser().getUid();
+        int initialInterval = 10 * 60;  // 10 mins
+        String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+        DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference userDatabase = mDatabase.child("users").child(userId);
+
+        userDatabase.child("email").setValue(email);
+        userDatabase.child(device_id).child("interval").setValue(initialInterval);
     }
 
 
@@ -114,18 +133,20 @@ public class LoginActivity extends Activity {
                                 Toast.makeText(LoginActivity.this, getString(R.string.auth_failed), Toast.LENGTH_LONG).show();
                             }
                         } else {
-
-                            SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
-                            editor.putString("email", email);
-                            editor.putString("password", password);
-                            editor.commit();
+                            Toast.makeText(LoginActivity.this, "Login Successful!, Started tracking!", Toast.LENGTH_LONG).show();
+                            setInitialInterval();
 
                             startService(new Intent(LoginActivity.this, PowerButtonService.class));
                             finish();
                         }
                     }
-                });
+                }).addOnFailureListener(LoginActivity.this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        e.printStackTrace();
+                        Toast.makeText(LoginActivity.this, getString(R.string.auth_failed), Toast.LENGTH_LONG).show();
+                    }
+            });
 
         }
     }
