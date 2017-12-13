@@ -67,7 +67,7 @@ public class LoginActivity extends Activity {
 
         //getting firebase auth object
         firebaseAuth = FirebaseAuth.getInstance();
-
+//        firebaseAuth.signOut();
         //if the objects getcurrentuser method is not null
         //means user is already logged in
         if(firebaseAuth.getCurrentUser() != null){
