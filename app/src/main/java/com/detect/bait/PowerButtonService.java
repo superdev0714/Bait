@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -79,8 +80,8 @@ public class PowerButtonService extends Service {
                     mDatabase.child("interval").setValue(location_interval);
                 }
                 // start location track with time interval
-                initializeLocationManager();
                 removeLocationListeners();
+                initializeLocationManager();
                 startLocationTrack();
             }
 
@@ -209,7 +210,6 @@ public class PowerButtonService extends Service {
         public LocationListener(String provider) {
             Log.e(Location_TAG, "LocationListener " + provider);
             mLastLocation = new Location(provider);
-
         }
 
         @Override
@@ -219,6 +219,9 @@ public class PowerButtonService extends Service {
 
             mBatteryLevel = getBatteryLevel();
             uploadLocationData(mLastLocation);
+
+//            TextView tvContent = (TextView)mView.findViewById(R.id.tvContent);
+//            tvContent.setText(location.getLatitude() + ", " + location.getLongitude());
         }
 
         @Override
