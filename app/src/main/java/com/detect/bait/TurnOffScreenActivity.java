@@ -14,10 +14,6 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 
-/**
- * Created by lucas on 12/11/17.
- */
-
 public class TurnOffScreenActivity extends Activity {
 
     DevicePolicyManager devicePolicyManager;

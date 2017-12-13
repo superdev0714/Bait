@@ -6,10 +6,6 @@ import android.content.Intent;
 import android.widget.Toast;
 
 
-/**
- * Created by lucas on 12/11/17.
- */
-
 public class Controller extends DeviceAdminReceiver {
 
     @Override

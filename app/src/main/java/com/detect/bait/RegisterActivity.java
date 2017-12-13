@@ -23,13 +23,10 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-/**
- * Created by lucas on 12/9/17.
- */
 
 public class RegisterActivity extends Activity {
 
-    //firebase auth object
+    //FireBase auth object
     private FirebaseAuth firebaseAuth;
 
     @BindView(R.id.etEmail)

@@ -39,9 +39,6 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-/**
- * Created by lucas on 12/9/17.
- */
 
 public class LoginActivity extends Activity {
 
@@ -49,7 +46,7 @@ public class LoginActivity extends Activity {
     public final static int REQUEST_CHECK_SETTINGS = 0x1;
 
 
-    //firebase auth object
+    //FireBase auth object
     private FirebaseAuth firebaseAuth;
 
     @BindView(R.id.etEmail)
@@ -71,7 +68,7 @@ public class LoginActivity extends Activity {
         //getting firebase auth object
         firebaseAuth = FirebaseAuth.getInstance();
 
-        //if the objects getcurrentuser method is not null
+        //if the objects getCurrentUser method is not null
         //means user is already logged in
         if(firebaseAuth.getCurrentUser() != null){
 
