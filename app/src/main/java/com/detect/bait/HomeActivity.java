@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -53,21 +54,16 @@ public class HomeActivity extends Activity {
         if (checkDrawOverlayPermission()) {
             setInitialInterval();
 
-            Intent intent = new Intent(HomeActivity.this, PowerButtonService.class);
-            startService(intent);
+            final LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-            finish();
+            if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                buildAlertMessageNoGps();
+            } else {
+                Intent intent = new Intent(HomeActivity.this, PowerButtonService.class);
+                startService(intent);
 
-//            final LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
-//
-//            if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-//                buildAlertMessageNoGps();
-//            } else {
-//                Intent intent = new Intent(HomeActivity.this, PowerButtonService.class);
-//                startService(intent);
-//
-//                finish();
-//            }
+                finish();
+            }
         }
     }
 
