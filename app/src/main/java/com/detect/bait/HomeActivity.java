@@ -54,11 +54,6 @@ public class HomeActivity extends Activity {
         if (checkDrawOverlayPermission()) {
             setInitialInterval();
 
-//            Intent intent = new Intent(HomeActivity.this, PowerButtonService.class);
-//            startService(intent);
-//
-//            finish();
-
             final LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
             if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {

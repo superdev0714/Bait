@@ -56,9 +56,12 @@ public class TurnOffScreenActivity extends Activity {
         turnOff();
     }
 
-    @OnClick(R.id.restart_view)
-    public void onRestart(View view) {
-        turnOff();
+    @OnClick(R.id.resume_view)
+    public void onResume(View view) {
+        isPowerOff = false;
+
+        mHomeKeyLocker.unlock();
+        finish();
     }
 
     private void turnOff() {
