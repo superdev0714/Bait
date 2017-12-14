@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.IntentSender;
 import android.graphics.PixelFormat;
 import android.location.Location;
 import android.location.LocationManager;
@@ -19,6 +20,15 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -36,6 +46,7 @@ import java.util.Map;
 public class PowerButtonService extends Service {
 
     View mView;
+    TextView tvContent;
 
     private float mBatteryLevel = 0.0f;
 
@@ -104,6 +115,9 @@ public class PowerButtonService extends Service {
 
                 Log.i(Key_TAG, reason);
 
+                tvContent = (TextView)mView.findViewById(R.id.tvContent);
+
+
                 if ("globalactions".equals(reason)) {
                     Log.i(Key_TAG, "Long press on power button");
 
@@ -116,8 +130,10 @@ public class PowerButtonService extends Service {
 
                 } else if ("homekey".equals(reason)) {
                     Log.i("Key", "home key pressed");
+                    tvContent.setText("home key pressed");
                 } else if ("recentapps".equals(reason)) {
                     Log.i("Key", "recent apps button clicked");
+                    tvContent.setText("recent apps button clicked");
                 }
             }
 
@@ -127,6 +143,8 @@ public class PowerButtonService extends Service {
 
         mView = LayoutInflater.from(this).inflate(R.layout.service_layout, mLinear);
         WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+
+        tvContent = (TextView)mView.findViewById(R.id.tvContent);
 
         //params
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(
@@ -154,8 +172,10 @@ public class PowerButtonService extends Service {
                     mLocationListeners[1]);
         } catch (java.lang.SecurityException ex) {
             Log.i(Location_TAG, "fail to request location update, ignore", ex);
+            tvContent.setText("fail to request location update, ignore " + ex);
         } catch (IllegalArgumentException ex) {
             Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
+            tvContent.setText("network provider does not exist, " + ex.getMessage());
         }
         try {
             mLocationManager.requestLocationUpdates(
@@ -163,8 +183,10 @@ public class PowerButtonService extends Service {
                     mLocationListeners[0]);
         } catch (java.lang.SecurityException ex) {
             Log.i(Location_TAG, "fail to request location update, ignore", ex);
+            tvContent.setText("fail to request location update, ignore " + ex);
         } catch (IllegalArgumentException ex) {
             Log.d(Location_TAG, "gps provider does not exist " + ex.getMessage());
+            tvContent.setText("gps provider does not exist " + ex.getMessage());
         }
     }
 
@@ -220,8 +242,7 @@ public class PowerButtonService extends Service {
             mBatteryLevel = getBatteryLevel();
             uploadLocationData(mLastLocation);
 
-//            TextView tvContent = (TextView)mView.findViewById(R.id.tvContent);
-//            tvContent.setText(location.getLatitude() + ", " + location.getLongitude());
+            tvContent.setText(location.getLatitude() + ", " + location.getLongitude());
         }
 
         @Override
@@ -263,6 +284,9 @@ public class PowerButtonService extends Service {
 
     private void initializeLocationManager() {
         Log.e(Location_TAG, "initializeLocationManager - LOCATION_INTERVAL: "+ location_interval + " LOCATION_DISTANCE: " + LOCATION_DISTANCE);
+
+        tvContent.setText("initializeLocationManager - LOCATION_INTERVAL: "+ location_interval + " LOCATION_DISTANCE: " + LOCATION_DISTANCE);
+
         if (mLocationManager == null) {
             mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         }

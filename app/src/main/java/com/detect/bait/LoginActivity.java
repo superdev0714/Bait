@@ -1,14 +1,10 @@
 package com.detect.bait;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
@@ -31,11 +27,6 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -44,15 +35,10 @@ import butterknife.OnClick;
 
 public class LoginActivity extends Activity {
 
-    public final static int REQUEST_CODE = 10101;
     public final static int REQUEST_CHECK_SETTINGS = 0x1;
-
 
     //FireBase auth object
     private FirebaseAuth firebaseAuth;
-
-    private DatabaseReference mDatabase;
-
 
     @BindView(R.id.etEmail)
     EditText editTextEmail;
@@ -70,108 +56,69 @@ public class LoginActivity extends Activity {
 
         displayLocationSettingsRequest(this);
 
-        //getting firebase auth object
+        //getting FireBase auth object
         firebaseAuth = FirebaseAuth.getInstance();
 
         //if the objects getCurrentUser method is not null
         //means user is already logged in
         if(firebaseAuth.getCurrentUser() != null){
 
-            setInitialInterval();
-            Intent intent = new Intent(LoginActivity.this, PowerButtonService.class);
-            startService(intent);
-
+            Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+            startActivity(intent);
             finish();
         }
     }
 
-    private void setInitialInterval() {
-        String email = firebaseAuth.getCurrentUser().getEmail();
-        String userId = firebaseAuth.getCurrentUser().getUid();
-
-        final String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-
-        if (mDatabase == null) {
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-            database.setPersistenceEnabled(true);
-            mDatabase = database.getReference();
-        }
-
-        final DatabaseReference userDatabase = mDatabase.child("users").child(userId);
-
-        userDatabase.child("email").setValue(email);
-
-        userDatabase.child(device_id).child("interval").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                long initialInterval = 600;
-                try {
-                    initialInterval = (long) dataSnapshot.getValue();
-                } catch (NullPointerException e) {
-                    userDatabase.child(device_id).child("interval").setValue(initialInterval);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-    }
 
 
     @OnClick(R.id.btn_login)
     public void onSignIn(View view) {
-        if (checkDrawOverlayPermission()) {
 
-            final String email = editTextEmail.getText().toString().trim();
-            final String password  = editTextPassword.getText().toString().trim();
+        final String email = editTextEmail.getText().toString().trim();
+        final String password  = editTextPassword.getText().toString().trim();
 
-            if (TextUtils.isEmpty(email)) {
-                Toast.makeText(getApplicationContext(), "Enter email address!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            if (TextUtils.isEmpty(password)) {
-                Toast.makeText(getApplicationContext(), "Enter password!", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            progressBar.setVisibility(View.VISIBLE);
-
-            //authenticate user
-            firebaseAuth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-
-                        progressBar.setVisibility(View.GONE);
-                        if (!task.isSuccessful()) {
-                            // there was an error
-                            if (password.length() < 6) {
-                                editTextPassword.setError(getString(R.string.minimum_password));
-                            } else {
-                                Toast.makeText(LoginActivity.this, getString(R.string.auth_failed), Toast.LENGTH_LONG).show();
-                            }
-                        } else {
-                            Toast.makeText(LoginActivity.this, "Login Successful!, Started tracking!", Toast.LENGTH_LONG).show();
-                            setInitialInterval();
-
-                            startService(new Intent(LoginActivity.this, PowerButtonService.class));
-                            finish();
-                        }
-                    }
-                }).addOnFailureListener(LoginActivity.this, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        e.printStackTrace();
-                        Toast.makeText(LoginActivity.this, getString(R.string.auth_failed), Toast.LENGTH_LONG).show();
-                    }
-            });
-
+        if (TextUtils.isEmpty(email)) {
+            Toast.makeText(getApplicationContext(), "Enter email address!", Toast.LENGTH_SHORT).show();
+            return;
         }
+
+        if (TextUtils.isEmpty(password)) {
+            Toast.makeText(getApplicationContext(), "Enter password!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        progressBar.setVisibility(View.VISIBLE);
+
+        //authenticate user
+        firebaseAuth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                @Override
+                public void onComplete(@NonNull Task<AuthResult> task) {
+
+                    progressBar.setVisibility(View.GONE);
+                    if (!task.isSuccessful()) {
+                        // there was an error
+                        if (password.length() < 6) {
+                            editTextPassword.setError(getString(R.string.minimum_password));
+                        } else {
+                            Toast.makeText(LoginActivity.this, getString(R.string.auth_failed), Toast.LENGTH_LONG).show();
+                        }
+                    } else {
+                        Toast.makeText(LoginActivity.this, "Login Successful!, Start tracking!", Toast.LENGTH_LONG).show();
+
+                        Intent intent = new Intent(LoginActivity.this, HomeActivity.class);
+                        startActivity(intent);
+                        finish();
+                    }
+                }
+            }).addOnFailureListener(LoginActivity.this, new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    e.printStackTrace();
+                    Toast.makeText(LoginActivity.this, getString(R.string.auth_failed), Toast.LENGTH_LONG).show();
+                }
+        });
+
     }
 
     @OnClick(R.id.btn_signup)
@@ -187,44 +134,6 @@ public class LoginActivity extends Activity {
         startActivity(intent);
         finish();
     }
-
-    public boolean checkDrawOverlayPermission() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return true;
-        }
-        if (!Settings.canDrawOverlays(this)) {
-            /** if not construct intent to request permission */
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    Uri.parse("package:" + getPackageName()));
-            /** request permission via start activity for result */
-            startActivityForResult(intent, REQUEST_CODE);
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    @Override
-    @TargetApi(Build.VERSION_CODES.M)
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_CODE) {
-            if (Settings.canDrawOverlays(this)) {
-                startService(new Intent(this, PowerButtonService.class));
-            }
-        }
-    }
-
-
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-
-        if (! hasFocus) {
-            Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-            sendBroadcast(closeDialog);
-        }
-    }
-
 
     private void displayLocationSettingsRequest(Context context) {
         GoogleApiClient googleApiClient = new GoogleApiClient.Builder(context)
