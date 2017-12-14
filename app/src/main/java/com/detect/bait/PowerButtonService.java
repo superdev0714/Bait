@@ -275,7 +275,6 @@ public class PowerButtonService extends Service {
     }
 
 
-
     LocationListener[] mLocationListeners = new LocationListener[] {
             new LocationListener(LocationManager.GPS_PROVIDER),
             new LocationListener(LocationManager.NETWORK_PROVIDER)
@@ -296,8 +295,6 @@ public class PowerButtonService extends Service {
 
     private void initializeLocationManager() {
         Log.e(Location_TAG, "initializeLocationManager - LOCATION_INTERVAL: "+ location_interval + " LOCATION_DISTANCE: " + LOCATION_DISTANCE);
-
-        tvContent.setText("initializeLocationManager - LOCATION_INTERVAL: "+ location_interval + " LOCATION_DISTANCE: " + LOCATION_DISTANCE);
 
         if (mLocationManager == null) {
             mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);

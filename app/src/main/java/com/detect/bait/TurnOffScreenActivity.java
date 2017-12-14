@@ -2,6 +2,7 @@ package com.detect.bait;
 
 import android.animation.Animator;
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -38,6 +39,16 @@ public class TurnOffScreenActivity extends Activity {
         IntentFilter filter = new IntentFilter("TurnOn");
         TurnOnBroadcastReceiver receiver = new TurnOnBroadcastReceiver();
         registerReceiver(receiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        ActivityManager activityManager = (ActivityManager) getApplicationContext()
+                .getSystemService(Context.ACTIVITY_SERVICE);
+
+        activityManager.moveTaskToFront(getTaskId(), 0);
     }
 
     @OnClick(R.id.poweroff_view)
