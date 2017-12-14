@@ -46,6 +46,7 @@ public class HomeKeyLocker {
             getWindow().setFlags(FLAG_SHOW_WHEN_LOCKED | FLAG_NOT_TOUCH_MODAL, 0xffffff);
             setOwnerActivity(activity);
             setCancelable(false);
+
         }
 
         public final boolean dispatchTouchEvent(MotionEvent motionevent) {

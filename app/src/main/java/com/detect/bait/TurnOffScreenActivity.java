@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 
 import butterknife.BindView;
@@ -18,6 +19,7 @@ import butterknife.OnClick;
 public class TurnOffScreenActivity extends Activity {
 
     public static boolean isPowerOff = false;
+    private int mBackLight = 0;
 
     private HomeKeyLocker mHomeKeyLocker;
 
@@ -39,6 +41,7 @@ public class TurnOffScreenActivity extends Activity {
         IntentFilter filter = new IntentFilter("TurnOn");
         TurnOnBroadcastReceiver receiver = new TurnOnBroadcastReceiver();
         registerReceiver(receiver, filter);
+
     }
 
     @Override
@@ -53,12 +56,22 @@ public class TurnOffScreenActivity extends Activity {
 
     @OnClick(R.id.poweroff_view)
     public void onPowerOff(View view) {
+        // turn off key light
+        try {
+            mBackLight = Settings.System.getInt(getContentResolver(), "button_key_light");
+            Settings.System.putInt(getApplicationContext().getContentResolver(), "button_key_light", 0);
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
+        }
+
         turnOff();
     }
 
     @OnClick(R.id.resume_view)
     public void onResume(View view) {
         isPowerOff = false;
+
+        Settings.System.putInt(getApplicationContext().getContentResolver(), "button_key_light", mBackLight);
 
         mHomeKeyLocker.unlock();
         finish();
@@ -92,6 +105,7 @@ public class TurnOffScreenActivity extends Activity {
                         @Override
                         public void onAnimationEnd(Animator animation) {
                             rlBlackOverView.setVisibility(View.GONE);
+                            Settings.System.putInt(getApplicationContext().getContentResolver(), "button_key_light", mBackLight);
                             mHomeKeyLocker.unlock();
                             finish();
                         }

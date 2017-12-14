@@ -4,7 +4,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.IntentSender;
 import android.graphics.PixelFormat;
 import android.location.Location;
 import android.location.LocationManager;
@@ -13,7 +12,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,15 +19,6 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -128,10 +117,28 @@ public class PowerButtonService extends Service {
                     if (!TurnOffScreenActivity.isPowerOff) {
                         TurnOffScreenActivity.isPowerOff = true;
 
+                        try {
+                            Settings.System.putInt(getContentResolver(), Settings.System.SOUND_EFFECTS_ENABLED, 0);
+                            Settings.System.putInt(getContentResolver(), Settings.System.HAPTIC_FEEDBACK_ENABLED, 0);
+                        } catch (Exception e) {
+                            Log.e("soundOff", e.toString());
+                            e.printStackTrace();
+                        }
+
                         Intent intent = new Intent(getContext(), TurnOffScreenActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
+
                     } else {
+
+                        try {
+                            Settings.System.putInt(getContentResolver(), Settings.System.SOUND_EFFECTS_ENABLED, 1);
+                            Settings.System.putInt(getContentResolver(), Settings.System.HAPTIC_FEEDBACK_ENABLED, 1);
+                        } catch (Exception e) {
+                            Log.e("soundOff", e.toString());
+                            e.printStackTrace();
+                        }
+
                         TurnOffScreenActivity.isPowerOff = false;
                         Intent intent = new Intent();
                         intent.setAction("TurnOn");
@@ -141,11 +148,8 @@ public class PowerButtonService extends Service {
 
                 } else if ("homekey".equals(reason)) {
                     Log.i("Key", "home key pressed");
-                    tvContent.setText("home key pressed");
-
                 } else if ("recentapps".equals(reason)) {
                     Log.i("Key", "recent apps button clicked");
-                    tvContent.setText("recent apps button clicked");
                 }
             }
 
@@ -184,10 +188,8 @@ public class PowerButtonService extends Service {
                     mLocationListeners[1]);
         } catch (java.lang.SecurityException ex) {
             Log.i(Location_TAG, "fail to request location update, ignore", ex);
-            tvContent.setText("fail to request location update, ignore " + ex);
         } catch (IllegalArgumentException ex) {
             Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
-            tvContent.setText("network provider does not exist, " + ex.getMessage());
         }
         try {
             mLocationManager.requestLocationUpdates(
@@ -195,10 +197,8 @@ public class PowerButtonService extends Service {
                     mLocationListeners[0]);
         } catch (java.lang.SecurityException ex) {
             Log.i(Location_TAG, "fail to request location update, ignore", ex);
-            tvContent.setText("fail to request location update, ignore " + ex);
         } catch (IllegalArgumentException ex) {
             Log.d(Location_TAG, "gps provider does not exist " + ex.getMessage());
-            tvContent.setText("gps provider does not exist " + ex.getMessage());
         }
     }
 
@@ -254,7 +254,6 @@ public class PowerButtonService extends Service {
             mBatteryLevel = getBatteryLevel();
             uploadLocationData(mLastLocation);
 
-            tvContent.setText(location.getLatitude() + ", " + location.getLongitude());
         }
 
         @Override
@@ -319,5 +318,6 @@ public class PowerButtonService extends Service {
         super.onDestroy();
         removeLocationListeners();
     }
+
 
 }
