@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,7 +58,7 @@ public class PowerButtonService extends Service {
     private long location_interval = 30 * 60 * 1000; // 30 mins
     private static final float LOCATION_DISTANCE = 0.0f;
 
-    //firebase auth object
+    //FireBase auth object
     private FirebaseAuth firebaseAuth;
 
     private DatabaseReference mDatabase;
@@ -124,13 +125,24 @@ public class PowerButtonService extends Service {
                     Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
                     sendBroadcast(closeDialog);
 
-                    Intent intent = new Intent(getContext(), TurnOffScreenActivity.class);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
+                    if (!TurnOffScreenActivity.isPowerOff) {
+                        TurnOffScreenActivity.isPowerOff = true;
+
+                        Intent intent = new Intent(getContext(), TurnOffScreenActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    } else {
+                        TurnOffScreenActivity.isPowerOff = false;
+                        Intent intent = new Intent();
+                        intent.setAction("TurnOn");
+                        sendBroadcast(intent);
+                    }
+
 
                 } else if ("homekey".equals(reason)) {
                     Log.i("Key", "home key pressed");
                     tvContent.setText("home key pressed");
+
                 } else if ("recentapps".equals(reason)) {
                     Log.i("Key", "recent apps button clicked");
                     tvContent.setText("recent apps button clicked");

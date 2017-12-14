@@ -1,25 +1,29 @@
 package com.detect.bait;
 
+import android.animation.Animator;
 import android.app.Activity;
-import android.app.admin.DevicePolicyManager;
-import android.content.ComponentName;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 
 public class TurnOffScreenActivity extends Activity {
 
-    DevicePolicyManager devicePolicyManager;
-    ComponentName componentName;
+    public static boolean isPowerOff = false;
 
-    public static final int RESULT_ENABLE = 100;
+    private HomeKeyLocker mHomeKeyLocker;
+
+    @BindView(R.id.rlBlackOverView)
+    View rlBlackOverView;
+    @BindView(R.id.rlPowerButtons)
+    View rlPowerButtons;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,50 +32,69 @@ public class TurnOffScreenActivity extends Activity {
         setContentView(R.layout.activity_turnoff);
         ButterKnife.bind(this);
 
-        devicePolicyManager= (DevicePolicyManager)getSystemService(
-                Context.DEVICE_POLICY_SERVICE);
-        componentName = new ComponentName(TurnOffScreenActivity.this, Controller.class);
+        mHomeKeyLocker = new HomeKeyLocker();
+        mHomeKeyLocker.lock(this);
 
-        boolean active = devicePolicyManager.isAdminActive(componentName);
-
-        if (active) {
-            Log.e("turnoff", "Disable");
-        } else {
-            Log.e("turnoff", "Enable");
-        }
-
-        Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
-        intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName);
-        intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "You should enable the app!");
-        startActivityForResult(intent, RESULT_ENABLE);
+        IntentFilter filter = new IntentFilter("TurnOn");
+        TurnOnBroadcastReceiver receiver = new TurnOnBroadcastReceiver();
+        registerReceiver(receiver, filter);
     }
 
     @OnClick(R.id.poweroff_view)
     public void onPowerOff(View view) {
-        finish();
-        devicePolicyManager.lockNow();
+        turnOff();
     }
 
     @OnClick(R.id.restart_view)
     public void onRestart(View view) {
-        finish();
-        devicePolicyManager.lockNow();
+        turnOff();
     }
 
+    private void turnOff() {
+        isPowerOff = true;
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        switch (requestCode) {
-            case RESULT_ENABLE:
-                if (resultCode == Activity.RESULT_OK) {
-                    Log.e("poweroff", "enabled!");
-                } else {
-                    Toast.makeText(this, "Failed!", Toast.LENGTH_SHORT).show();
-                }
-                return;
+        rlPowerButtons.setVisibility(View.GONE);
+        rlBlackOverView.setVisibility(View.VISIBLE);
+        rlBlackOverView.setAlpha(0);
+
+        rlBlackOverView.animate().alpha(1.0f).setDuration(1000);
+
+    }
+
+    class TurnOnBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // Implement code here to be performed when
+            // broadcast is detected
+
+            rlBlackOverView.animate().alpha(0.0f).setDuration(1000)
+                    .setListener(new Animator.AnimatorListener() {
+                        @Override
+                        public void onAnimationStart(Animator animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            rlBlackOverView.setVisibility(View.GONE);
+                            mHomeKeyLocker.unlock();
+                            finish();
+                        }
+
+                        @Override
+                        public void onAnimationCancel(Animator animation) {
+
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animator animation) {
+
+                        }
+                    });
+
         }
-
-        super.onActivityResult(requestCode, resultCode, data);
     }
+
 
 }

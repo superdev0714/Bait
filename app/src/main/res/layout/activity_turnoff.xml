@@ -5,58 +5,74 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.detect.bait.TurnOffScreenActivity"
-    android:background="@color/overlay">
+    android:background="@color/transparent">
 
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:padding="10dp"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:background="@color/transparent">
-
+    <RelativeLayout
+        android:id="@+id/rlPowerButtons"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/overlay">
         <LinearLayout
-            android:id="@+id/poweroff_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:padding="10dp"
             android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:src="@drawable/poweroff"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="4dp"
-                android:textColor="@color/white"
-                android:textSize="12sp"
-                android:text="Power off"/>
-        </LinearLayout>
+            android:orientation="vertical"
+            android:background="@color/transparent">
 
-        <LinearLayout
-            android:id="@+id/restart_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
-            android:gravity="center"
-            android:orientation="vertical">
-            <ImageView
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:src="@drawable/restart"/>
-            <TextView
+            <LinearLayout
+                android:id="@+id/poweroff_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="4dp"
-                android:textColor="@color/white"
-                android:textSize="12sp"
-                android:text="Reboot"/>
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:src="@drawable/poweroff"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="4dp"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:text="Power off"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/restart_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="50dp"
+                android:gravity="center"
+                android:orientation="vertical">
+                <ImageView
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:src="@drawable/restart"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:layout_marginBottom="4dp"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:text="Reboot"/>
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
+    </RelativeLayout>
+
+
+
+    <RelativeLayout
+        android:id="@+id/rlBlackOverView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black"
+        android:visibility="gone">
+
+    </RelativeLayout>
 
 </RelativeLayout>
