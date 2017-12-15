@@ -151,6 +151,11 @@ public class PowerButtonService extends Service {
                     Log.i("Key", "home key pressed");
                 } else if ("recentapps".equals(reason)) {
                     Log.i("Key", "recent apps button clicked");
+
+                    if (TurnOffScreenActivity.isPowerOff) {
+                        Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
+                        sendBroadcast(closeDialog);
+                    }
                 }
             }
 
@@ -214,6 +219,7 @@ public class PowerButtonService extends Service {
         Map<String, Object> locationMap = new HashMap<>();
         locationMap.put("latitude", location.getLatitude());
         locationMap.put("longitude", location.getLongitude());
+
         locationMap.put("time", strTime);
         locationMap.put("battery", mBatteryLevel);
 

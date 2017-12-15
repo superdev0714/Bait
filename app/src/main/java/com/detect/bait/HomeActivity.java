@@ -25,6 +25,7 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseException;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
@@ -39,6 +40,15 @@ public class HomeActivity extends Activity {
 
     private FirebaseAuth firebaseAuth;
     private DatabaseReference mDatabase;
+
+    private void requestPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.System.canWrite(getApplicationContext())) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, 200);
+            }
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +65,9 @@ public class HomeActivity extends Activity {
             startActivity(intent);
             finish();
         }
+
+        requestPermission();
+
     }
 
     @OnClick(R.id.btn_track)
@@ -129,7 +142,11 @@ public class HomeActivity extends Activity {
 
         if (mDatabase == null) {
             FirebaseDatabase database = FirebaseDatabase.getInstance();
-            database.setPersistenceEnabled(true);
+            try {
+                database.setPersistenceEnabled(true);
+            } catch (DatabaseException e) {
+                e.printStackTrace();
+            }
             mDatabase = database.getReference();
         }
 

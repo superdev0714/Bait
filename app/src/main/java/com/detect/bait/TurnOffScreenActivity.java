@@ -10,14 +10,18 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
 import android.widget.VideoView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+
+import static android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
 
 
 public class TurnOffScreenActivity extends Activity {
@@ -43,20 +47,28 @@ public class TurnOffScreenActivity extends Activity {
         ButterKnife.bind(this);
 
         mHomeKeyLocker = new HomeKeyLocker();
-        mHomeKeyLocker.lock(this);
 
         if (receiver != null) {
             unregisterReceiver(receiver);
             receiver = null;
         }
-        IntentFilter filter = new IntentFilter("TurnOn");
-        TurnOnBroadcastReceiver receiver = new TurnOnBroadcastReceiver();
-        registerReceiver(receiver, filter);
+
+        receiver = new TurnOnBroadcastReceiver();
+
 
         // Disable Lock screen
         KeyguardManager keyguardManager = (KeyguardManager)getSystemService(Activity.KEYGUARD_SERVICE);
         KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
         lock.disableKeyguard();
+
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        IntentFilter filter = new IntentFilter("TurnOn");
+        registerReceiver(receiver, filter);
     }
 
     @Override
@@ -69,6 +81,18 @@ public class TurnOffScreenActivity extends Activity {
         activityManager.moveTaskToFront(getTaskId(), 0);
     }
 
+    @Override
+    public void onStop() {
+
+        if (receiver != null) {
+            unregisterReceiver(receiver);
+        }
+
+        super.onStop();
+    }
+
+
+
     @OnClick(R.id.poweroff_view)
     public void onPowerOff(View view) {
         // turn off key light
@@ -77,6 +101,14 @@ public class TurnOffScreenActivity extends Activity {
             Settings.System.putInt(getApplicationContext().getContentResolver(), "button_key_light", 0);
         } catch (Settings.SettingNotFoundException e) {
             e.printStackTrace();
+        } catch (SecurityException e) {
+            Log.e("ButtonKeyLight", e.toString());
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!Settings.System.canWrite(getApplicationContext())) {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
+                    startActivityForResult(intent, 200);
+                }
+            }
         }
 
         turnOff();
@@ -86,17 +118,29 @@ public class TurnOffScreenActivity extends Activity {
     public void onResume(View view) {
         isPowerOff = false;
 
+        IntentFilter filter = new IntentFilter("TurnOn");
+        TurnOnBroadcastReceiver receiver = new TurnOnBroadcastReceiver();
+        registerReceiver(receiver, filter);
+
         Settings.System.putInt(getApplicationContext().getContentResolver(), "button_key_light", mBackLight);
 
         mHomeKeyLocker.unlock();
+
         finish();
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        this.getWindow().setFlags(FLAG_NOT_FOCUSABLE, 0xffffff);
+        super.onAttachedToWindow();
     }
 
     private void turnOff() {
         isPowerOff = true;
 
+        mHomeKeyLocker.lock(this);
+
         rlPowerButtons.setVisibility(View.GONE);
-        rlBlackOverView.setVisibility(View.VISIBLE);
 
         String uriPath = "android.resource://"+getPackageName()+"/"+R.raw.video;
         videoView.setVideoURI(Uri.parse(uriPath));
@@ -106,7 +150,7 @@ public class TurnOffScreenActivity extends Activity {
                 videoView.setVisibility(View.GONE);
             }
         });
-        videoView.requestFocus();
+
         videoView.start();
     }
 
@@ -126,10 +170,27 @@ public class TurnOffScreenActivity extends Activity {
 
                         @Override
                         public void onAnimationEnd(Animator animation) {
+
                             rlBlackOverView.setVisibility(View.GONE);
-                            Settings.System.putInt(getApplicationContext().getContentResolver(), "button_key_light", mBackLight);
+                            try {
+                                Settings.System.putInt(getApplicationContext().getContentResolver(), "button_key_light", mBackLight);
+                            } catch (SecurityException e) {
+                                Log.e("ButtonKeyLight", e.toString());
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    if (!Settings.System.canWrite(getApplicationContext())) {
+                                        Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
+                                        startActivityForResult(intent, 200);
+                                    }
+                                }
+                            }
+
+                            if (receiver != null) {
+                                unregisterReceiver(receiver);
+                                receiver = null;
+                            }
                             mHomeKeyLocker.unlock();
                             finish();
+                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                         }
 
                         @Override

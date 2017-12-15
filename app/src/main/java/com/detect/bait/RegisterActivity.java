@@ -16,6 +16,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseException;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -95,7 +96,11 @@ public class RegisterActivity extends Activity {
                         String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
                                 Settings.Secure.ANDROID_ID);
 
-                        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+                        try {
+                            FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+                        } catch (DatabaseException e) {
+                            e.printStackTrace();
+                        }
                         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
                         DatabaseReference userDatabase = mDatabase.child("users").child(userId);
 
