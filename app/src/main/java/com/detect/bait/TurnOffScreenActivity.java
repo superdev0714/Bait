@@ -8,9 +8,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.View;
+import android.widget.VideoView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -25,10 +28,12 @@ public class TurnOffScreenActivity extends Activity {
     private HomeKeyLocker mHomeKeyLocker;
     TurnOnBroadcastReceiver receiver;
 
-    @BindView(R.id.rlBlackOverView)
-    View rlBlackOverView;
     @BindView(R.id.rlPowerButtons)
     View rlPowerButtons;
+    @BindView(R.id.rlBlackOverView)
+    View rlBlackOverView;
+    @BindView(R.id.videoView)
+    VideoView videoView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,10 +97,17 @@ public class TurnOffScreenActivity extends Activity {
 
         rlPowerButtons.setVisibility(View.GONE);
         rlBlackOverView.setVisibility(View.VISIBLE);
-        rlBlackOverView.setAlpha(0);
 
-        rlBlackOverView.animate().alpha(1.0f).setDuration(1000);
-
+        String uriPath = "android.resource://"+getPackageName()+"/"+R.raw.video;
+        videoView.setVideoURI(Uri.parse(uriPath));
+        videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                videoView.setVisibility(View.GONE);
+            }
+        });
+        videoView.requestFocus();
+        videoView.start();
     }
 
     class TurnOnBroadcastReceiver extends BroadcastReceiver {

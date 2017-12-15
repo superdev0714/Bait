@@ -117,6 +117,7 @@ public class PowerButtonService extends Service {
                     if (!TurnOffScreenActivity.isPowerOff) {
                         TurnOffScreenActivity.isPowerOff = true;
 
+                        // disable button sound, vibration
                         try {
                             Settings.System.putInt(getContentResolver(), Settings.System.SOUND_EFFECTS_ENABLED, 0);
                             Settings.System.putInt(getContentResolver(), Settings.System.HAPTIC_FEEDBACK_ENABLED, 0);

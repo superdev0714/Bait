@@ -55,7 +55,6 @@ public class HomeActivity extends Activity {
             startActivity(intent);
             finish();
         }
-
     }
 
     @OnClick(R.id.btn_track)
@@ -137,6 +136,8 @@ public class HomeActivity extends Activity {
         final DatabaseReference userDatabase = mDatabase.child("users").child(userId);
 
         userDatabase.child("email").setValue(email);
+
+        userDatabase.child(device_id).child("deviceModel").setValue(Build.MODEL);
 
         userDatabase.child(device_id).child("interval").addValueEventListener(new ValueEventListener() {
             @Override
