@@ -3,6 +3,7 @@ package com.detect.bait;
 import android.animation.Animator;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.KeyguardManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -22,6 +23,7 @@ public class TurnOffScreenActivity extends Activity {
     private int mBackLight = 0;
 
     private HomeKeyLocker mHomeKeyLocker;
+    TurnOnBroadcastReceiver receiver;
 
     @BindView(R.id.rlBlackOverView)
     View rlBlackOverView;
@@ -38,10 +40,18 @@ public class TurnOffScreenActivity extends Activity {
         mHomeKeyLocker = new HomeKeyLocker();
         mHomeKeyLocker.lock(this);
 
+        if (receiver != null) {
+            unregisterReceiver(receiver);
+            receiver = null;
+        }
         IntentFilter filter = new IntentFilter("TurnOn");
         TurnOnBroadcastReceiver receiver = new TurnOnBroadcastReceiver();
         registerReceiver(receiver, filter);
 
+        // Disable Lock screen
+        KeyguardManager keyguardManager = (KeyguardManager)getSystemService(Activity.KEYGUARD_SERVICE);
+        KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
+        lock.disableKeyguard();
     }
 
     @Override
