@@ -38,6 +38,8 @@ public class TurnOffScreenActivity extends Activity {
     View rlBlackOverView;
     @BindView(R.id.videoView)
     VideoView videoView;
+    @BindView(R.id.mainView)
+    View mainView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +62,24 @@ public class TurnOffScreenActivity extends Activity {
         KeyguardManager keyguardManager = (KeyguardManager)getSystemService(Activity.KEYGUARD_SERVICE);
         KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
         lock.disableKeyguard();
+
+
+
+        final int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                | View.SYSTEM_UI_FLAG_IMMERSIVE;
+
+        mainView.setSystemUiVisibility(uiOptions);
+
+        mainView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+            @Override
+            public void onSystemUiVisibilityChange(int visibility) {
+                mainView.setSystemUiVisibility(uiOptions);
+            }
+        });
 
     }
 
@@ -129,16 +149,10 @@ public class TurnOffScreenActivity extends Activity {
         finish();
     }
 
-    @Override
-    public void onAttachedToWindow() {
-        this.getWindow().setFlags(FLAG_NOT_FOCUSABLE, 0xffffff);
-        super.onAttachedToWindow();
-    }
-
     private void turnOff() {
         isPowerOff = true;
 
-        mHomeKeyLocker.lock(this);
+//        mHomeKeyLocker.lock(this);
 
         rlPowerButtons.setVisibility(View.GONE);
 
