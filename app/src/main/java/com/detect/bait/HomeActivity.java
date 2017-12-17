@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -81,12 +82,16 @@ public class HomeActivity extends Activity {
             if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 displayLocationSettingsRequest(this);
             } else {
-                Intent intent = new Intent(HomeActivity.this, PowerButtonService.class);
-                startService(intent);
-
-                finish();
+                startTrackService();
             }
         }
+    }
+
+    private void startTrackService() {
+        Intent intent = new Intent(HomeActivity.this, PowerButtonService.class);
+        startService(intent);
+
+        finish();
     }
 
     @OnClick(R.id.btn_logout)
@@ -119,6 +124,14 @@ public class HomeActivity extends Activity {
         if (requestCode == REQUEST_CODE) {
             if (Settings.canDrawOverlays(this)) {
                 startService(new Intent(this, PowerButtonService.class));
+            }
+        }
+
+        if (requestCode == LoginActivity.REQUEST_CHECK_SETTINGS) {
+            if (resultCode == RESULT_OK) {
+                startTrackService();
+            } else if (resultCode == RESULT_CANCELED) {
+                Toast.makeText(this, "You can not track your location. Please enable your location on Settings", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -200,8 +213,7 @@ public class HomeActivity extends Activity {
                         Log.i("MyDeviceLocation", "Location settings are not satisfied. Show the user a dialog to upgrade location settings ");
 
                         try {
-                            // Show the dialog by calling startResolutionForResult(), and check the result
-                            // in onActivityResult().
+                            // Show the dialog by calling startResolutionForResult(), and check the result in onActivityResult().
                             status.startResolutionForResult(HomeActivity.this, LoginActivity.REQUEST_CHECK_SETTINGS);
                         } catch (IntentSender.SendIntentException e) {
                             Log.i("MyDeviceLocation", "PendingIntent unable to execute request.");

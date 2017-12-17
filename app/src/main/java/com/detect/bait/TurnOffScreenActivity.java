@@ -44,6 +44,8 @@ public class TurnOffScreenActivity extends Activity {
     int mPrevRingerMode = AudioManager.RINGER_MODE_SILENT;
     int mPrevRingVolume = 0;
     int mPrevMusicVolume = 0;
+    int mPrevDTMFVolume = 0;
+    int mPrevAlarmVolume = 0, mPrevNotificationVolume = 0, mPrevSystemVolume = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,14 +57,7 @@ public class TurnOffScreenActivity extends Activity {
 //        mHomeKeyLocker = new HomeKeyLocker();
 
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-
-        mPrevRingerMode = mAudioManager.getRingerMode();
-        mPrevMusicVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-        mPrevRingVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_RING);
-
-        mAudioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC,0,0);
-        mAudioManager.setStreamVolume(AudioManager.STREAM_RING,0,0);
+        setSilentMode();
 
         if (receiver != null) {
             unregisterReceiver(receiver);
@@ -96,6 +91,38 @@ public class TurnOffScreenActivity extends Activity {
 
     }
 
+    private void setSilentMode() {
+        mPrevRingerMode = mAudioManager.getRingerMode();
+        mPrevMusicVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        mPrevRingVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_RING);
+        mPrevDTMFVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_DTMF);
+        mPrevAlarmVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_ALARM);
+        mPrevNotificationVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_NOTIFICATION);
+        mPrevSystemVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_SYSTEM);
+
+        mAudioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC,0,0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_RING,0,0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_DTMF, 0, 0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_ALARM, 0, 0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, 0, 0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_SYSTEM, 0, 0);
+
+    }
+
+    private void setNormalMode() {
+
+        mAudioManager.setRingerMode(mPrevRingerMode);
+
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC,mPrevMusicVolume,0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_RING, mPrevRingVolume,0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_DTMF, mPrevDTMFVolume, 0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_ALARM, mPrevAlarmVolume, 0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_NOTIFICATION, mPrevNotificationVolume, 0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_SYSTEM, mPrevSystemVolume, 0);
+
+    }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -123,8 +150,6 @@ public class TurnOffScreenActivity extends Activity {
 
         super.onStop();
     }
-
-
 
     @OnClick(R.id.poweroff_view)
     public void onPowerOff(View view) {
@@ -159,20 +184,13 @@ public class TurnOffScreenActivity extends Activity {
 
 //        mHomeKeyLocker.unlock();
 
-        mAudioManager.setRingerMode(mPrevRingerMode);
-        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC,mPrevMusicVolume,0);
-        mAudioManager.setStreamVolume(AudioManager.STREAM_RING,mPrevRingVolume,0);
+        setNormalMode();
 
         finish();
     }
 
     private void turnOff() {
         isPowerOff = true;
-
-        mAudioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC,mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC),0);
-        mAudioManager.setStreamVolume(AudioManager.STREAM_RING,mAudioManager.getStreamMaxVolume(AudioManager.STREAM_RING),0);
-
 
 //        mHomeKeyLocker.lock(this);
 
@@ -207,7 +225,9 @@ public class TurnOffScreenActivity extends Activity {
                         @Override
                         public void onAnimationEnd(Animator animation) {
 
+                            setNormalMode();
                             rlBlackOverView.setVisibility(View.GONE);
+
                             try {
                                 Settings.System.putInt(getApplicationContext().getContentResolver(), "button_key_light", mBackLight);
                             } catch (SecurityException e) {
