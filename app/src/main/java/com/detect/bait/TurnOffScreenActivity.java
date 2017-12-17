@@ -8,6 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
@@ -21,15 +22,13 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-import static android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
-
 
 public class TurnOffScreenActivity extends Activity {
 
     public static boolean isPowerOff = false;
     private int mBackLight = 0;
 
-    private HomeKeyLocker mHomeKeyLocker;
+//    private HomeKeyLocker mHomeKeyLocker;
     TurnOnBroadcastReceiver receiver;
 
     @BindView(R.id.rlPowerButtons)
@@ -41,6 +40,11 @@ public class TurnOffScreenActivity extends Activity {
     @BindView(R.id.mainView)
     View mainView;
 
+    AudioManager mAudioManager;
+    int mPrevRingerMode = AudioManager.RINGER_MODE_SILENT;
+    int mPrevRingVolume = 0;
+    int mPrevMusicVolume = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,13 +52,22 @@ public class TurnOffScreenActivity extends Activity {
         setContentView(R.layout.activity_turnoff);
         ButterKnife.bind(this);
 
-        mHomeKeyLocker = new HomeKeyLocker();
+//        mHomeKeyLocker = new HomeKeyLocker();
+
+        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+        mPrevRingerMode = mAudioManager.getRingerMode();
+        mPrevMusicVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        mPrevRingVolume = mAudioManager.getStreamVolume(AudioManager.STREAM_RING);
+
+        mAudioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC,0,0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_RING,0,0);
 
         if (receiver != null) {
             unregisterReceiver(receiver);
             receiver = null;
         }
-
         receiver = new TurnOnBroadcastReceiver();
 
 
@@ -144,13 +157,22 @@ public class TurnOffScreenActivity extends Activity {
 
         Settings.System.putInt(getApplicationContext().getContentResolver(), "button_key_light", mBackLight);
 
-        mHomeKeyLocker.unlock();
+//        mHomeKeyLocker.unlock();
+
+        mAudioManager.setRingerMode(mPrevRingerMode);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC,mPrevMusicVolume,0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_RING,mPrevRingVolume,0);
 
         finish();
     }
 
     private void turnOff() {
         isPowerOff = true;
+
+        mAudioManager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC,mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC),0);
+        mAudioManager.setStreamVolume(AudioManager.STREAM_RING,mAudioManager.getStreamMaxVolume(AudioManager.STREAM_RING),0);
+
 
 //        mHomeKeyLocker.lock(this);
 
@@ -202,7 +224,7 @@ public class TurnOffScreenActivity extends Activity {
                                 unregisterReceiver(receiver);
                                 receiver = null;
                             }
-                            mHomeKeyLocker.unlock();
+//                            mHomeKeyLocker.unlock();
                             finish();
                             overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
                         }
