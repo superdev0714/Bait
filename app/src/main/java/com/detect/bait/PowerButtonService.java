@@ -18,6 +18,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -266,6 +267,7 @@ public class PowerButtonService extends Service {
         @Override
         public void onProviderDisabled(String provider) {
             Log.e(Location_TAG, "onProviderDisabled: " + provider);
+            Toast.makeText(getApplicationContext(), "Location is disabled. Please enable your location on Settings.", Toast.LENGTH_SHORT).show();
         }
 
         @Override
@@ -325,6 +327,5 @@ public class PowerButtonService extends Service {
         super.onDestroy();
         removeLocationListeners();
     }
-
 
 }
