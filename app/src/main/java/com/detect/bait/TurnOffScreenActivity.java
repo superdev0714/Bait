@@ -28,7 +28,7 @@ public class TurnOffScreenActivity extends Activity {
     public static boolean isPowerOff = false;
     private int mBackLight = 0;
 
-//    private HomeKeyLocker mHomeKeyLocker;
+    private HomeKeyLocker mHomeKeyLocker;
     TurnOnBroadcastReceiver receiver;
 
     @BindView(R.id.rlPowerButtons)
@@ -46,6 +46,7 @@ public class TurnOffScreenActivity extends Activity {
     int mPrevMusicVolume = 0;
     int mPrevDTMFVolume = 0;
     int mPrevAlarmVolume = 0, mPrevNotificationVolume = 0, mPrevSystemVolume = 0;
+    int mPrevUIOptions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +55,8 @@ public class TurnOffScreenActivity extends Activity {
         setContentView(R.layout.activity_turnoff);
         ButterKnife.bind(this);
 
-//        mHomeKeyLocker = new HomeKeyLocker();
+        mHomeKeyLocker = new HomeKeyLocker();
+        mPrevUIOptions = mainView.getSystemUiVisibility();
 
         mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
         setSilentMode();
@@ -70,24 +72,6 @@ public class TurnOffScreenActivity extends Activity {
         KeyguardManager keyguardManager = (KeyguardManager)getSystemService(Activity.KEYGUARD_SERVICE);
         KeyguardManager.KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
         lock.disableKeyguard();
-
-
-
-        final int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
-                | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
-                | View.SYSTEM_UI_FLAG_IMMERSIVE;
-
-        mainView.setSystemUiVisibility(uiOptions);
-
-        mainView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
-            @Override
-            public void onSystemUiVisibilityChange(int visibility) {
-                mainView.setSystemUiVisibility(uiOptions);
-            }
-        });
 
     }
 
@@ -182,7 +166,7 @@ public class TurnOffScreenActivity extends Activity {
 
         Settings.System.putInt(getApplicationContext().getContentResolver(), "button_key_light", mBackLight);
 
-//        mHomeKeyLocker.unlock();
+        mHomeKeyLocker.unlock();
 
         setNormalMode();
 
@@ -192,7 +176,7 @@ public class TurnOffScreenActivity extends Activity {
     private void turnOff() {
         isPowerOff = true;
 
-//        mHomeKeyLocker.lock(this);
+        disableHomebutton();
 
         rlPowerButtons.setVisibility(View.GONE);
 
@@ -208,58 +192,80 @@ public class TurnOffScreenActivity extends Activity {
         videoView.start();
     }
 
+    private void disableHomebutton() {
+        final int uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                | View.SYSTEM_UI_FLAG_IMMERSIVE;
+
+        mainView.setSystemUiVisibility(uiOptions);
+
+        mainView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
+            @Override
+            public void onSystemUiVisibilityChange(int visibility) {
+                mainView.setSystemUiVisibility(uiOptions);
+            }
+        });
+
+
+        mHomeKeyLocker.lock(this);
+    }
+
+    private void turnOn() {
+        rlBlackOverView.animate().alpha(0.0f).setDuration(1000)
+                .setListener(new Animator.AnimatorListener() {
+                    @Override
+                    public void onAnimationStart(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+
+                        setNormalMode();
+                        rlBlackOverView.setVisibility(View.GONE);
+
+                        try {
+                            Settings.System.putInt(getApplicationContext().getContentResolver(), "button_key_light", mBackLight);
+                        } catch (SecurityException e) {
+                            Log.e("ButtonKeyLight", e.toString());
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                if (!Settings.System.canWrite(getApplicationContext())) {
+                                    Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
+                                    startActivityForResult(intent, 200);
+                                }
+                            }
+                        }
+
+                        if (receiver != null) {
+                            unregisterReceiver(receiver);
+                            receiver = null;
+                        }
+                        mHomeKeyLocker.unlock();
+                        finish();
+                        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                    }
+
+                    @Override
+                    public void onAnimationCancel(Animator animation) {
+
+                    }
+
+                    @Override
+                    public void onAnimationRepeat(Animator animation) {
+
+                    }
+                });
+    }
+
+
     class TurnOnBroadcastReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            // Implement code here to be performed when
-            // broadcast is detected
-
-            rlBlackOverView.animate().alpha(0.0f).setDuration(1000)
-                    .setListener(new Animator.AnimatorListener() {
-                        @Override
-                        public void onAnimationStart(Animator animation) {
-
-                        }
-
-                        @Override
-                        public void onAnimationEnd(Animator animation) {
-
-                            setNormalMode();
-                            rlBlackOverView.setVisibility(View.GONE);
-
-                            try {
-                                Settings.System.putInt(getApplicationContext().getContentResolver(), "button_key_light", mBackLight);
-                            } catch (SecurityException e) {
-                                Log.e("ButtonKeyLight", e.toString());
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                                    if (!Settings.System.canWrite(getApplicationContext())) {
-                                        Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
-                                        startActivityForResult(intent, 200);
-                                    }
-                                }
-                            }
-
-                            if (receiver != null) {
-                                unregisterReceiver(receiver);
-                                receiver = null;
-                            }
-//                            mHomeKeyLocker.unlock();
-                            finish();
-                            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-                        }
-
-                        @Override
-                        public void onAnimationCancel(Animator animation) {
-
-                        }
-
-                        @Override
-                        public void onAnimationRepeat(Animator animation) {
-
-                        }
-                    });
-
+            turnOn();
         }
     }
 

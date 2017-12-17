@@ -108,14 +108,13 @@ public class PowerButtonService extends Service {
                 tvContent = (TextView)mView.findViewById(R.id.tvContent);
 
 
-                if ("globalactions".equals(reason)) {
+                if ("globalactions".equals(reason)) {   // long press on power button
                     Log.i(Key_TAG, "Long press on power button");
 
                     Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
                     sendBroadcast(closeDialog);
 
                     if (!TurnOffScreenActivity.isPowerOff) {
-                        TurnOffScreenActivity.isPowerOff = true;
 
                         // disable button sound, vibration
                         try {
@@ -126,6 +125,7 @@ public class PowerButtonService extends Service {
                             e.printStackTrace();
                         }
 
+                        // show power off dialog
                         Intent intent = new Intent(getContext(), TurnOffScreenActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
