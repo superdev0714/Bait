@@ -78,8 +78,8 @@ public class PowerButtonService extends Service {
                 try {
                     location_interval = (long) dataSnapshot.getValue() * 1000;
                 } catch (NullPointerException e) {
-                    location_interval = 600;
-                    mDatabase.child("interval").setValue(location_interval);
+                    mDatabase.child("interval").setValue(60);
+                    location_interval = 60 * 1000;
                 }
                 // start location track with time interval
                 removeLocationListeners();
@@ -214,7 +214,7 @@ public class PowerButtonService extends Service {
         DatabaseReference databaseReference = mDatabase.child("locations").push();
 
         Date time = new Date(location.getTime());
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMddkkmmss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMddHHmmss");
         String strTime = dateFormat.format(time);
 
         Map<String, Object> locationMap = new HashMap<>();
