@@ -211,11 +211,15 @@ public class PowerButtonService extends Service {
 
     private void uploadLocationData(Location location) {
 
-        DatabaseReference databaseReference = mDatabase.child("locations").push();
+        Date current = new Date(location.getTime());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String strDate = dateFormat.format(current);
 
-        Date time = new Date(location.getTime());
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyMMddHHmmss");
-        String strTime = dateFormat.format(time);
+        DatabaseReference databaseReference = mDatabase.child("locations").child(strDate).push();
+
+        dateFormat = new SimpleDateFormat("HH:mm:ss");
+
+        String strTime = dateFormat.format(current);
 
         Map<String, Object> locationMap = new HashMap<>();
         locationMap.put("latitude", location.getLatitude());
@@ -225,7 +229,6 @@ public class PowerButtonService extends Service {
         locationMap.put("battery", mBatteryLevel);
 
         databaseReference.updateChildren(locationMap);
-
 
         float battery = getBatteryLevel();
         Log.e("BatteryLevel", Float.toString(battery));
