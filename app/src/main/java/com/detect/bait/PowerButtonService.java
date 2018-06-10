@@ -72,6 +72,32 @@ public class PowerButtonService extends Service {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         mDatabase = databaseReference.child("users").child(userId).child(device_id);
 
+        mDatabase.child("enableBait").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                try {
+                    boolean enableBait = (boolean) dataSnapshot.getValue();
+                    if (enableBait) {
+                        startBait();
+                    } else {
+                        stopBait();
+                    }
+                } catch (NullPointerException e) {
+                    mDatabase.child("enableBait").setValue(true);
+                    startBait();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        detectPowerKeys();
+    }
+
+    private void startBait() {
         mDatabase.child("interval").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -84,6 +110,7 @@ public class PowerButtonService extends Service {
                 // start location track with time interval
                 removeLocationListeners();
                 initializeLocationManager();
+
                 startLocationTrack();
             }
 
@@ -92,10 +119,11 @@ public class PowerButtonService extends Service {
 
             }
         });
-
-        detectPowerKeys();
     }
 
+    private void stopBait() {
+        removeLocationListeners();
+    }
 
     public void detectPowerKeys() {
 
