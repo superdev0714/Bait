@@ -52,7 +52,7 @@ public class PowerButtonService extends Service {
     private FirebaseAuth firebaseAuth;
 
     private DatabaseReference mDatabase;
-
+    public static boolean enableBait = false;
 
     @Override
     public void onCreate() {
@@ -78,11 +78,14 @@ public class PowerButtonService extends Service {
                 try {
                     boolean enableBait = (boolean) dataSnapshot.getValue();
                     if (enableBait) {
+                        PowerButtonService.enableBait = true;
                         startBait();
                     } else {
+                        PowerButtonService.enableBait = false;
                         stopBait();
                     }
                 } catch (NullPointerException e) {
+                    PowerButtonService.enableBait = true;
                     mDatabase.child("enableBait").setValue(true);
                     startBait();
                 }
@@ -107,11 +110,15 @@ public class PowerButtonService extends Service {
                     mDatabase.child("interval").setValue(60);
                     location_interval = 60 * 1000;
                 }
-                // start location track with time interval
-                removeLocationListeners();
-                initializeLocationManager();
 
-                startLocationTrack();
+                // start location track with time interval
+                if (PowerButtonService.enableBait) {
+
+                    removeLocationListeners();
+                    initializeLocationManager();
+
+                    startLocationTrack();
+                }
             }
 
             @Override
