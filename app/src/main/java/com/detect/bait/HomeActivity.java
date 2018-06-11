@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -31,6 +32,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
@@ -41,6 +43,11 @@ public class HomeActivity extends Activity {
 
     private FirebaseAuth firebaseAuth;
     private DatabaseReference mDatabase;
+
+    @BindView(R.id.btn_start_track)
+    Button btnStartTrack;
+    @BindView(R.id.btn_stop_track)
+    Button btnStopTrack;
 
     private void requestPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -71,8 +78,8 @@ public class HomeActivity extends Activity {
 
     }
 
-    @OnClick(R.id.btn_track)
-    public void onTrack(View view) {
+    @OnClick(R.id.btn_start_track)
+    public void onStartTrack(View view) {
 
         if (checkDrawOverlayPermission()) {
             setInitialInterval();
@@ -85,6 +92,12 @@ public class HomeActivity extends Activity {
                 startTrackService();
             }
         }
+    }
+
+    @OnClick(R.id.btn_stop_track)
+    public void onStopTrack(View view) {
+
+
     }
 
     private void startTrackService() {

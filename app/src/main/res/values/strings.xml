@@ -6,7 +6,8 @@
     <string name="hint_email">Email</string>
     <string name="hint_password">Password</string>
     <string name="btn_login">LOGIN</string>
-    <string name="btn_track">START TRACK</string>
+    <string name="btn_start_track">START TRACK</string>
+    <string name="btn_stop_track">STOP TRACK</string>
     <string name="btn_logout">LOG OUT</string>
     <string name="minimum_password">Password too short, enter minimum 6 characters!</string>
     <string name="auth_failed">Authentication failed, check your email and password or sign up</string>
