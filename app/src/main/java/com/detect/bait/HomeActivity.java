@@ -74,8 +74,54 @@ public class HomeActivity extends Activity {
             finish();
         }
 
+        checkStatus();
+
         requestPermission();
 
+    }
+
+    private void checkStatus() {
+        String userId = firebaseAuth.getCurrentUser().getUid();
+
+        final String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+
+        if (mDatabase == null) {
+            FirebaseDatabase database = FirebaseDatabase.getInstance();
+            try {
+                database.setPersistenceEnabled(true);
+            } catch (DatabaseException e) {
+                e.printStackTrace();
+            }
+            mDatabase = database.getReference();
+        }
+
+        final DatabaseReference userDatabase = mDatabase.child("users").child(userId);
+
+        userDatabase.child(device_id).child("enableBait").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                boolean enableBait = false;
+                try {
+                    enableBait = (boolean) dataSnapshot.getValue();
+                } catch (NullPointerException e) {
+                    userDatabase.child(device_id).child("enableBait").setValue(enableBait);
+                }
+
+                if (enableBait) {
+                    btnStartTrack.setVisibility(View.GONE);
+                    btnStopTrack.setVisibility(View.VISIBLE);
+                } else {
+                    btnStartTrack.setVisibility(View.VISIBLE);
+                    btnStopTrack.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
     }
 
     @OnClick(R.id.btn_start_track)
@@ -96,15 +142,24 @@ public class HomeActivity extends Activity {
 
     @OnClick(R.id.btn_stop_track)
     public void onStopTrack(View view) {
+        String userId = firebaseAuth.getCurrentUser().getUid();
+        String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
+                Settings.Secure.ANDROID_ID);
 
-
+        mDatabase.child("users").child(userId).child(device_id).child("enableBait").setValue(false);
     }
 
     private void startTrackService() {
+        String userId = firebaseAuth.getCurrentUser().getUid();
+        String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+
+        mDatabase.child("users").child(userId).child(device_id).child("enableBait").setValue(true);
+
         Intent intent = new Intent(HomeActivity.this, PowerButtonService.class);
         startService(intent);
 
-        finish();
+//        finish();
     }
 
     @OnClick(R.id.btn_logout)
