@@ -78,6 +78,17 @@ public class HomeActivity extends Activity {
 
         requestPermission();
 
+        if (checkDrawOverlayPermission()) {
+            setInitialInterval();
+
+            final LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+            if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                displayLocationSettingsRequest(this);
+            } else {
+                startTrackService();
+            }
+        }
     }
 
     private void checkStatus() {
@@ -98,22 +109,44 @@ public class HomeActivity extends Activity {
 
         final DatabaseReference userDatabase = mDatabase.child("users").child(userId);
 
-        userDatabase.child(device_id).child("enableBait").addValueEventListener(new ValueEventListener() {
+        userDatabase.child(device_id).child("enableTrack").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                boolean enableBait = false;
+                boolean enableTrack = false;
                 try {
-                    enableBait = (boolean) dataSnapshot.getValue();
+                    enableTrack = (boolean) dataSnapshot.getValue();
                 } catch (NullPointerException e) {
-                    userDatabase.child(device_id).child("enableBait").setValue(enableBait);
+                    userDatabase.child(device_id).child("enableTrack").setValue(enableTrack);
                 }
 
-                if (enableBait) {
+                if (enableTrack) {
                     btnStartTrack.setVisibility(View.GONE);
                     btnStopTrack.setVisibility(View.VISIBLE);
                 } else {
                     btnStartTrack.setVisibility(View.VISIBLE);
                     btnStopTrack.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        userDatabase.child(device_id).child("enableBait").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                try {
+                    boolean enableBait = (boolean) dataSnapshot.getValue();
+                    Log.d("======", "home activity");
+                    if (enableBait) {
+//                        PowerButtonService.enableBait = true;
+                        finish();
+                    }
+                } catch (NullPointerException e) {
+                    PowerButtonService.enableBait = false;
+                    userDatabase.child(device_id).child("enableBait").setValue(false);
                 }
             }
 
@@ -135,7 +168,11 @@ public class HomeActivity extends Activity {
             if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
                 displayLocationSettingsRequest(this);
             } else {
-                startTrackService();
+                String userId = firebaseAuth.getCurrentUser().getUid();
+                String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
+                        Settings.Secure.ANDROID_ID);
+
+                mDatabase.child("users").child(userId).child(device_id).child("enableTrack").setValue(true);
             }
         }
     }
@@ -146,20 +183,12 @@ public class HomeActivity extends Activity {
         String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
                 Settings.Secure.ANDROID_ID);
 
-        mDatabase.child("users").child(userId).child(device_id).child("enableBait").setValue(false);
+        mDatabase.child("users").child(userId).child(device_id).child("enableTrack").setValue(false);
     }
 
     private void startTrackService() {
-        String userId = firebaseAuth.getCurrentUser().getUid();
-        String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-
-        mDatabase.child("users").child(userId).child(device_id).child("enableBait").setValue(true);
-
         Intent intent = new Intent(HomeActivity.this, PowerButtonService.class);
         startService(intent);
-
-//        finish();
     }
 
     @OnClick(R.id.btn_logout)

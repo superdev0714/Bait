@@ -52,7 +52,9 @@ public class PowerButtonService extends Service {
     private FirebaseAuth firebaseAuth;
 
     private DatabaseReference mDatabase;
+    public static boolean enableTrack = false;
     public static boolean enableBait = false;
+
 
     @Override
     public void onCreate() {
@@ -72,22 +74,56 @@ public class PowerButtonService extends Service {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         mDatabase = databaseReference.child("users").child(userId).child(device_id);
 
+        mDatabase.child("enableTrack").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                try {
+                    boolean enableTrack = (boolean) dataSnapshot.getValue();
+                    if (enableTrack) {
+                        PowerButtonService.enableTrack = true;
+                        startTrack();
+                    } else {
+                        PowerButtonService.enableTrack = false;
+                        stopTrack();
+                    }
+                } catch (NullPointerException e) {
+                    PowerButtonService.enableTrack = true;
+                    mDatabase.child("enableTrack").setValue(true);
+                    startTrack();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
         mDatabase.child("enableBait").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try {
+
                     boolean enableBait = (boolean) dataSnapshot.getValue();
-                    if (enableBait) {
-                        PowerButtonService.enableBait = true;
-                        startBait();
-                    } else {
-                        PowerButtonService.enableBait = false;
-                        stopBait();
+                    if (enableBait != PowerButtonService.enableBait) {
+
+                        if (enableBait) {
+                            PowerButtonService.enableBait = true;
+                        } else {
+                            PowerButtonService.enableBait = false;
+
+                            showHomeActivity();
+                        }
                     }
+
                 } catch (NullPointerException e) {
-                    PowerButtonService.enableBait = true;
-                    mDatabase.child("enableBait").setValue(true);
-                    startBait();
+                    if (PowerButtonService.enableBait) {
+                        showHomeActivity();
+
+                        PowerButtonService.enableBait = false;
+                        mDatabase.child("enableBait").setValue(false);
+                    }
                 }
             }
 
@@ -100,7 +136,14 @@ public class PowerButtonService extends Service {
         detectPowerKeys();
     }
 
-    private void startBait() {
+    private void showHomeActivity() {
+
+        Intent intent = new Intent(getApplicationContext(), HomeActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
+    }
+
+    private void startTrack() {
         mDatabase.child("interval").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -112,7 +155,7 @@ public class PowerButtonService extends Service {
                 }
 
                 // start location track with time interval
-                if (PowerButtonService.enableBait) {
+                if (PowerButtonService.enableTrack) {
 
                     removeLocationListeners();
                     initializeLocationManager();
@@ -128,7 +171,7 @@ public class PowerButtonService extends Service {
         });
     }
 
-    private void stopBait() {
+    private void stopTrack() {
         removeLocationListeners();
     }
 
@@ -244,6 +287,7 @@ public class PowerButtonService extends Service {
         }
     }
 
+    // upload gps, time, battery info to Firebase.
     private void uploadLocationData(Location location) {
 
         Date current = new Date(location.getTime());
