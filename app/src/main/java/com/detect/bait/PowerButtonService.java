@@ -184,6 +184,10 @@ public class PowerButtonService extends Service {
 
                 Log.i(Key_TAG, reason);
 
+                if (!PowerButtonService.enableBait) {
+                    return;
+                }
+
                 tvContent = (TextView)mView.findViewById(R.id.tvContent);
 
 
