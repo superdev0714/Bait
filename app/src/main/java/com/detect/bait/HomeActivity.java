@@ -255,7 +255,6 @@ public class HomeActivity extends Activity {
                 Settings.Secure.ANDROID_ID);
 
         String deviceName = Settings.System.getString(getContentResolver(), "device_name");
-//        Settings.System.putString(getContentResolver(), "device_name", "test");
 
         TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         String imei = telephonyManager.getDeviceId();
@@ -279,7 +278,7 @@ public class HomeActivity extends Activity {
         userDatabase.child(device_id).child("deviceMake").setValue(Build.MANUFACTURER);
         userDatabase.child(device_id).child("deviceModel").setValue(Build.MODEL);
         userDatabase.child(device_id).child("phoneNumber").setValue(phoneNumber);
-        userDatabase.child(device_id).child("IMEI").setValue(imei);
+        userDatabase.child(device_id).child("deviceImei").setValue(imei);
 
         userDatabase.child(device_id).child("interval").addValueEventListener(new ValueEventListener() {
             @Override

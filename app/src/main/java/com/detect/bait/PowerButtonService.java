@@ -133,6 +133,29 @@ public class PowerButtonService extends Service {
             }
         });
 
+        mDatabase.child("deviceName").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                try {
+
+                    String newName= (String) dataSnapshot.getValue();
+                    String oldName = Settings.System.getString(getContentResolver(), "device_name");
+                    if (oldName != newName) {
+                        Settings.System.putString(getContentResolver(), "device_name", newName);
+                    }
+
+                } catch (NullPointerException e) {
+                    String oldName = Settings.System.getString(getContentResolver(), "device_name");
+                    mDatabase.child("deviceName").setValue(oldName);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
         detectPowerKeys();
     }
 
