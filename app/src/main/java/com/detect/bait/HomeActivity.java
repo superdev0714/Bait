@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -250,6 +251,10 @@ public class HomeActivity extends Activity {
         final String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
                 Settings.Secure.ANDROID_ID);
 
+        TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        String imei = telephonyManager.getDeviceId();
+        String phoneNumber = telephonyManager.getLine1Number();
+
         if (mDatabase == null) {
             FirebaseDatabase database = FirebaseDatabase.getInstance();
             try {
@@ -264,7 +269,10 @@ public class HomeActivity extends Activity {
 
         userDatabase.child("email").setValue(email);
 
+        userDatabase.child(device_id).child("deviceMake").setValue(Build.MANUFACTURER);
         userDatabase.child(device_id).child("deviceModel").setValue(Build.MODEL);
+        userDatabase.child(device_id).child("phoneNumber").setValue(phoneNumber);
+        userDatabase.child(device_id).child("IMEI").setValue(imei);
 
         userDatabase.child(device_id).child("interval").addValueEventListener(new ValueEventListener() {
             @Override
