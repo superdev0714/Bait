@@ -2,6 +2,7 @@ package com.detect.bait;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -55,8 +56,10 @@ public class HomeActivity extends Activity {
             if (!Settings.System.canWrite(getApplicationContext())) {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS, Uri.parse("package:" + getPackageName()));
                 startActivityForResult(intent, 200);
+
             }
         }
+
     }
 
     @Override
@@ -251,6 +254,9 @@ public class HomeActivity extends Activity {
         final String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
                 Settings.Secure.ANDROID_ID);
 
+        String deviceName = Settings.System.getString(getContentResolver(), "device_name");
+//        Settings.System.putString(getContentResolver(), "device_name", "test");
+
         TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
         String imei = telephonyManager.getDeviceId();
         String phoneNumber = telephonyManager.getLine1Number();
@@ -269,6 +275,7 @@ public class HomeActivity extends Activity {
 
         userDatabase.child("email").setValue(email);
 
+        userDatabase.child(device_id).child("deviceName").setValue(deviceName);
         userDatabase.child(device_id).child("deviceMake").setValue(Build.MANUFACTURER);
         userDatabase.child(device_id).child("deviceModel").setValue(Build.MODEL);
         userDatabase.child(device_id).child("phoneNumber").setValue(phoneNumber);
