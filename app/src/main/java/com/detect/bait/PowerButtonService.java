@@ -46,7 +46,6 @@ public class PowerButtonService extends Service {
 
     private LocationManager mLocationManager = null;
     private long location_interval = 30 * 60 * 1000; // 30 mins
-    private static final float LOCATION_DISTANCE = 0.0f;
 
     //FireBase auth object
     private FirebaseAuth firebaseAuth;
@@ -294,18 +293,21 @@ public class PowerButtonService extends Service {
 
     private void startLocationTrack() {
 
+//        try {
+////            mLocationManager.requestLocationUpdates(
+////                    LocationManager.NETWORK_PROVIDER, location_interval, 0,
+////                    mLocationListeners[1]);
+//            mLocationManager.requestLocationUpdates(
+//                    LocationManager.NETWORK_PROVIDER, 30000, 0,
+//                    mLocationListeners[1]);
+//        } catch (java.lang.SecurityException ex) {
+//            Log.i(Location_TAG, "fail to request location update, ignore", ex);
+//        } catch (IllegalArgumentException ex) {
+//            Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
+//        }
         try {
             mLocationManager.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER, location_interval, LOCATION_DISTANCE,
-                    mLocationListeners[1]);
-        } catch (java.lang.SecurityException ex) {
-            Log.i(Location_TAG, "fail to request location update, ignore", ex);
-        } catch (IllegalArgumentException ex) {
-            Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
-        }
-        try {
-            mLocationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER, location_interval, LOCATION_DISTANCE,
+                    LocationManager.GPS_PROVIDER, location_interval, 0,
                     mLocationListeners[0]);
         } catch (java.lang.SecurityException ex) {
             Log.i(Location_TAG, "fail to request location update, ignore", ex);
@@ -411,7 +413,7 @@ public class PowerButtonService extends Service {
     }
 
     private void initializeLocationManager() {
-        Log.e(Location_TAG, "initializeLocationManager - LOCATION_INTERVAL: "+ location_interval + " LOCATION_DISTANCE: " + LOCATION_DISTANCE);
+        Log.e(Location_TAG, "initializeLocationManager - LOCATION_INTERVAL: "+ location_interval);
 
         if (mLocationManager == null) {
             mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
