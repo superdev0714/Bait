@@ -104,7 +104,7 @@ public class RegisterActivity extends Activity {
                         DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
                         DatabaseReference userDatabase = mDatabase.child("users").child(userId);
 
-                        userDatabase.child("email").setValue(email);
+                        userDatabase.child("profile").child("email").setValue(email);
                         userDatabase.child(device_id).child("interval").setValue(initialInterval);
 
                         Intent intent = new Intent(RegisterActivity.this, LoginActivity.class);

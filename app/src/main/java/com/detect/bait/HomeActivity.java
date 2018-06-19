@@ -272,7 +272,7 @@ public class HomeActivity extends Activity {
 
         final DatabaseReference userDatabase = mDatabase.child("users").child(userId);
 
-        userDatabase.child("email").setValue(email);
+        userDatabase.child("profile").child("email").setValue(email);
 
         userDatabase.child(device_id).child("deviceName").setValue(deviceName);
         userDatabase.child(device_id).child("deviceMake").setValue(Build.MANUFACTURER);

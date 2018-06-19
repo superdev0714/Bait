@@ -325,6 +325,7 @@ public class PowerButtonService extends Service {
 
         DatabaseReference databaseReference = mDatabase.child("locations").child(strDate).push();
 
+
         dateFormat = new SimpleDateFormat("HH:mm:ss");
 
         String strTime = dateFormat.format(current);
