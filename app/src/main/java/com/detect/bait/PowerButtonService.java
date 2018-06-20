@@ -32,6 +32,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class PowerButtonService extends Service {
@@ -54,6 +56,9 @@ public class PowerButtonService extends Service {
     public static boolean enableTrack = false;
     public static boolean enableBait = false;
 
+    Location mLastLocation;
+    Timer mTimer = new Timer();
+    TimerTask mTimerTask;
 
     @Override
     public void onCreate() {
@@ -179,7 +184,8 @@ public class PowerButtonService extends Service {
                 // start location track with time interval
                 if (PowerButtonService.enableTrack) {
 
-                    removeLocationListeners();
+                    stopTrack();
+
                     initializeLocationManager();
 
                     startLocationTrack();
@@ -194,6 +200,7 @@ public class PowerButtonService extends Service {
     }
 
     private void stopTrack() {
+        stopSchedule();
         removeLocationListeners();
     }
 
@@ -290,24 +297,41 @@ public class PowerButtonService extends Service {
 
 
     ////// location service
+    private void stopSchedule() {
 
+        if (mTimerTask != null) {
+            Log.d("====", "timer canceled");
+            mTimerTask.cancel();
+        }
+    }
     private void startLocationTrack() {
+        stopSchedule();
 
-//        try {
-////            mLocationManager.requestLocationUpdates(
-////                    LocationManager.NETWORK_PROVIDER, location_interval, 0,
-////                    mLocationListeners[1]);
-//            mLocationManager.requestLocationUpdates(
-//                    LocationManager.NETWORK_PROVIDER, 30000, 0,
-//                    mLocationListeners[1]);
-//        } catch (java.lang.SecurityException ex) {
-//            Log.i(Location_TAG, "fail to request location update, ignore", ex);
-//        } catch (IllegalArgumentException ex) {
-//            Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
-//        }
+        mTimerTask = new TimerTask() {
+            @Override
+            public void run() {
+                Log.d("====", "test");
+
+                uploadLocationData();
+
+            }
+        };
+
+        mTimer.scheduleAtFixedRate(mTimerTask, 0, location_interval);
+
         try {
             mLocationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER, location_interval, 0,
+                    LocationManager.NETWORK_PROVIDER, 1000, 0,
+                    mLocationListeners[1]);
+        } catch (java.lang.SecurityException ex) {
+            Log.i(Location_TAG, "fail to request location update, ignore", ex);
+        } catch (IllegalArgumentException ex) {
+            Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
+        }
+
+        try {
+            mLocationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER, 1000, 0,
                     mLocationListeners[0]);
         } catch (java.lang.SecurityException ex) {
             Log.i(Location_TAG, "fail to request location update, ignore", ex);
@@ -317,9 +341,14 @@ public class PowerButtonService extends Service {
     }
 
     // upload gps, time, battery info to Firebase.
-    private void uploadLocationData(Location location) {
+    private void uploadLocationData() {
 
-        Date current = new Date(location.getTime());
+        if (mLastLocation == null || (mLastLocation.getLongitude() == 0 && mLastLocation.getLatitude() == 0 )) {
+            return;
+        }
+
+//        Date current = new Date(mLastLocation.getTime());
+        Date current = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String strDate = dateFormat.format(current);
 
@@ -331,10 +360,11 @@ public class PowerButtonService extends Service {
         String strTime = dateFormat.format(current);
 
         Map<String, Object> locationMap = new HashMap<>();
-        locationMap.put("latitude", location.getLatitude());
-        locationMap.put("longitude", location.getLongitude());
+        locationMap.put("latitude", mLastLocation.getLatitude());
+        locationMap.put("longitude", mLastLocation.getLongitude());
 
         locationMap.put("time", strTime);
+        mBatteryLevel = getBatteryLevel();
         locationMap.put("battery", mBatteryLevel);
 
         databaseReference.updateChildren(locationMap);
@@ -359,7 +389,6 @@ public class PowerButtonService extends Service {
     }
 
     private class LocationListener implements android.location.LocationListener {
-        Location mLastLocation;
 
         public LocationListener(String provider) {
             Log.e(Location_TAG, "LocationListener " + provider);
@@ -370,10 +399,7 @@ public class PowerButtonService extends Service {
         public void onLocationChanged(Location location) {
             Log.e(Location_TAG, "onLocationChanged: " + location);
             mLastLocation.set(location);
-
-            mBatteryLevel = getBatteryLevel();
-            uploadLocationData(mLastLocation);
-
+//            uploadLocationData();
         }
 
         @Override
