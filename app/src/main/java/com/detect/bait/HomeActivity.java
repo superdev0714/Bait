@@ -2,7 +2,6 @@ package com.detect.bait;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -12,8 +11,10 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -50,6 +51,10 @@ public class HomeActivity extends Activity {
     Button btnStartTrack;
     @BindView(R.id.btn_stop_track)
     Button btnStopTrack;
+    @BindView(R.id.view_dialog)
+    View viewDialog;
+    @BindView(R.id.txt_activityName)
+    AutoCompleteTextView txtActivityName;
 
     private void requestPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -163,6 +168,29 @@ public class HomeActivity extends Activity {
 
     @OnClick(R.id.btn_start_track)
     public void onStartTrack(View view) {
+        this.viewDialog.setVisibility(View.VISIBLE);
+    }
+
+    @OnClick(R.id.btn_stop_track)
+    public void onStopTrack(View view) {
+        String userId = firebaseAuth.getCurrentUser().getUid();
+        String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
+                Settings.Secure.ANDROID_ID);
+
+        mDatabase.child("users").child(userId).child(device_id).child("enableTrack").setValue(false);
+    }
+
+    @OnClick(R.id.btn_ok)
+    public void onOk(View view) {
+
+        String strActivityName = txtActivityName.getText().toString().trim();
+
+        if (TextUtils.isEmpty(strActivityName)) {
+            Toast.makeText(getApplicationContext(), "Enter Activity Name!", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        PowerButtonService.activityName = strActivityName;
 
         if (checkDrawOverlayPermission()) {
             setInitialInterval();
@@ -178,17 +206,16 @@ public class HomeActivity extends Activity {
 
                 mDatabase.child("users").child(userId).child(device_id).child("enableTrack").setValue(true);
             }
+
+            this.viewDialog.setVisibility(View.GONE);
         }
     }
 
-    @OnClick(R.id.btn_stop_track)
-    public void onStopTrack(View view) {
-        String userId = firebaseAuth.getCurrentUser().getUid();
-        String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
-                Settings.Secure.ANDROID_ID);
-
-        mDatabase.child("users").child(userId).child(device_id).child("enableTrack").setValue(false);
+    @OnClick(R.id.btn_cancel)
+    public void onCancel(View view) {
+        this.viewDialog.setVisibility(View.GONE);
     }
+
 
     private void startTrackService() {
         Intent intent = new Intent(HomeActivity.this, PowerButtonService.class);

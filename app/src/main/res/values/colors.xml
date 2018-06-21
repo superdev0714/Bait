@@ -10,7 +10,7 @@
     <color name="white">#FFFFFF</color>
     <color name="skyblue_dark">#3fd3b6</color>
     <color name="black">#000000</color>
-
+    <color name="red">#ff1111</color>
 
     <color name="bg_login">#26ae90</color>
     <color name="bg_register">#2e3237</color>
@@ -24,4 +24,5 @@
     <color name="btn_login_bg">#eceef1</color>
     <color name="lbl_name">#333333</color>
     <color name="btn_logut_bg">#ff6861</color>
+
 </resources>

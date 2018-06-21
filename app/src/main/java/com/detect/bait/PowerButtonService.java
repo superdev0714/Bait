@@ -47,7 +47,7 @@ public class PowerButtonService extends Service {
     private static final String Key_TAG = "Keyguard";
 
     private LocationManager mLocationManager = null;
-    private long location_interval = 30 * 60 * 1000; // 30 mins
+    private long location_interval = 5 * 60 * 1000; // 5 mins
 
     //FireBase auth object
     private FirebaseAuth firebaseAuth;
@@ -55,6 +55,7 @@ public class PowerButtonService extends Service {
     private DatabaseReference mDatabase;
     public static boolean enableTrack = false;
     public static boolean enableBait = false;
+    public static String activityName = "Bait Mode";
 
     Location mLastLocation;
     Timer mTimer = new Timer();
@@ -114,9 +115,11 @@ public class PowerButtonService extends Service {
 
                         if (enableBait) {
                             PowerButtonService.enableBait = true;
+                            activityName = "Bait Mode";
+                            mDatabase.child("enableTrack").setValue(true);
                         } else {
                             PowerButtonService.enableBait = false;
-
+                            mDatabase.child("enableTrack").setValue(false);
                             showHomeActivity();
                         }
                     }
@@ -127,6 +130,7 @@ public class PowerButtonService extends Service {
 
                         PowerButtonService.enableBait = false;
                         mDatabase.child("enableBait").setValue(false);
+                        mDatabase.child("enableTrack").setValue(false);
                     }
                 }
             }
@@ -171,20 +175,19 @@ public class PowerButtonService extends Service {
     }
 
     private void startTrack() {
+
         mDatabase.child("interval").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try {
                     location_interval = (long) dataSnapshot.getValue() * 1000;
                 } catch (NullPointerException e) {
-                    mDatabase.child("interval").setValue(60);
-                    location_interval = 60 * 1000;
+                    mDatabase.child("interval").setValue(300); // 5 mins.
+                    location_interval = 300 * 1000;
                 }
 
                 // start location track with time interval
                 if (PowerButtonService.enableTrack) {
-
-                    stopTrack();
 
                     initializeLocationManager();
 
@@ -319,6 +322,7 @@ public class PowerButtonService extends Service {
 
         mTimer.scheduleAtFixedRate(mTimerTask, 0, location_interval);
 
+        removeLocationListeners();
         try {
             mLocationManager.requestLocationUpdates(
                     LocationManager.NETWORK_PROVIDER, 1000, 0,
@@ -347,7 +351,6 @@ public class PowerButtonService extends Service {
             return;
         }
 
-//        Date current = new Date(mLastLocation.getTime());
         Date current = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String strDate = dateFormat.format(current);
@@ -366,6 +369,8 @@ public class PowerButtonService extends Service {
         locationMap.put("time", strTime);
         mBatteryLevel = getBatteryLevel();
         locationMap.put("battery", mBatteryLevel);
+        locationMap.put("activityName", activityName);
+        locationMap.put("speed", mLastLocation.getSpeed());
 
         databaseReference.updateChildren(locationMap);
 
@@ -399,7 +404,6 @@ public class PowerButtonService extends Service {
         public void onLocationChanged(Location location) {
             Log.e(Location_TAG, "onLocationChanged: " + location);
             mLastLocation.set(location);
-//            uploadLocationData();
         }
 
         @Override
