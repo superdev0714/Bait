@@ -371,6 +371,7 @@ public class PowerButtonService extends Service {
         locationMap.put("battery", mBatteryLevel);
         locationMap.put("activityName", activityName);
         locationMap.put("speed", mLastLocation.getSpeed());
+        locationMap.put("provider", mLastLocation.getProvider());
 
         databaseReference.updateChildren(locationMap);
 
@@ -467,7 +468,7 @@ public class PowerButtonService extends Service {
     {
         Log.e(Location_TAG, "onDestroy");
         super.onDestroy();
-        removeLocationListeners();
+        stopTrack();
     }
 
 }
