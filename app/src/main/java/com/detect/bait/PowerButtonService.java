@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.PixelFormat;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.BatteryManager;
@@ -323,24 +324,28 @@ public class PowerButtonService extends Service {
         mTimer.scheduleAtFixedRate(mTimerTask, 0, location_interval);
 
         removeLocationListeners();
-        try {
-            mLocationManager.requestLocationUpdates(
-                    LocationManager.NETWORK_PROVIDER, 1000, 0,
-                    mLocationListeners[1]);
-        } catch (java.lang.SecurityException ex) {
-            Log.i(Location_TAG, "fail to request location update, ignore", ex);
-        } catch (IllegalArgumentException ex) {
-            Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
-        }
 
-        try {
-            mLocationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER, 1000, 0,
-                    mLocationListeners[0]);
-        } catch (java.lang.SecurityException ex) {
-            Log.i(Location_TAG, "fail to request location update, ignore", ex);
-        } catch (IllegalArgumentException ex) {
-            Log.d(Location_TAG, "gps provider does not exist " + ex.getMessage());
+        if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            try {
+                mLocationManager.requestLocationUpdates(
+                        LocationManager.GPS_PROVIDER, 1000, 0,
+                        mLocationListeners[0]);
+
+            } catch (java.lang.SecurityException ex) {
+                Log.i(Location_TAG, "fail to request location update, ignore", ex);
+            } catch (IllegalArgumentException ex) {
+                Log.d(Location_TAG, "gps provider does not exist " + ex.getMessage());
+            }
+        } else {
+            try {
+                mLocationManager.requestLocationUpdates(
+                        LocationManager.NETWORK_PROVIDER, 1000, 0,
+                        mLocationListeners[1]);
+            } catch (java.lang.SecurityException ex) {
+                Log.i(Location_TAG, "fail to request location update, ignore", ex);
+            } catch (IllegalArgumentException ex) {
+                Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
+            }
         }
     }
 
