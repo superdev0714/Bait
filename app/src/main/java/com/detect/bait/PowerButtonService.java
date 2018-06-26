@@ -118,6 +118,7 @@ public class PowerButtonService extends Service {
                             PowerButtonService.enableBait = true;
                             activityName = "Bait Mode";
                             mDatabase.child("enableTrack").setValue(true);
+                            detectPowerKeys();
                         } else {
                             PowerButtonService.enableBait = false;
                             mDatabase.child("enableTrack").setValue(false);
@@ -164,8 +165,6 @@ public class PowerButtonService extends Service {
 
             }
         });
-
-        detectPowerKeys();
     }
 
     private void showHomeActivity() {
@@ -291,12 +290,11 @@ public class PowerButtonService extends Service {
                 WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                         | WindowManager.LayoutParams.FLAG_FULLSCREEN
-                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-                        | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+//                        | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,
                 PixelFormat.TRANSLUCENT);
 
         wm.addView(mView, params);
-
     }
 
 
@@ -326,6 +324,7 @@ public class PowerButtonService extends Service {
         removeLocationListeners();
 
         if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            Log.d(Location_TAG, "GPS_Provider is enabled.");
             try {
                 mLocationManager.requestLocationUpdates(
                         LocationManager.GPS_PROVIDER, 1000, 0,
@@ -337,6 +336,7 @@ public class PowerButtonService extends Service {
                 Log.d(Location_TAG, "gps provider does not exist " + ex.getMessage());
             }
         } else {
+            Log.d(Location_TAG, "GPS_Provider is not enabled.");
             try {
                 mLocationManager.requestLocationUpdates(
                         LocationManager.NETWORK_PROVIDER, 1000, 0,
