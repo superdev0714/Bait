@@ -310,7 +310,7 @@ public class HomeActivity extends Activity {
         userDatabase.child(device_id).child("interval").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                long initialInterval = 600;
+                long initialInterval = 300;
                 try {
                     initialInterval = (long) dataSnapshot.getValue();
                 } catch (NullPointerException e) {
