@@ -323,7 +323,8 @@ public class PowerButtonService extends Service {
 
         removeLocationListeners();
 
-        if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+
+//        if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             Log.d(Location_TAG, "GPS_Provider is enabled.");
             try {
                 mLocationManager.requestLocationUpdates(
@@ -335,7 +336,7 @@ public class PowerButtonService extends Service {
             } catch (IllegalArgumentException ex) {
                 Log.d(Location_TAG, "gps provider does not exist " + ex.getMessage());
             }
-        } else {
+//        } else {
             Log.d(Location_TAG, "GPS_Provider is not enabled.");
             try {
                 mLocationManager.requestLocationUpdates(
@@ -346,7 +347,7 @@ public class PowerButtonService extends Service {
             } catch (IllegalArgumentException ex) {
                 Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
             }
-        }
+//        }
     }
 
     // upload gps, time, battery info to Firebase.
