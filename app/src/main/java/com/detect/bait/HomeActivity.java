@@ -118,17 +118,17 @@ public class HomeActivity extends Activity {
 
         final DatabaseReference userDatabase = mDatabase.child("users").child(userId);
 
-        userDatabase.child(device_id).child("enableTrack").addValueEventListener(new ValueEventListener() {
+        userDatabase.child(device_id).child("isTracking").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                boolean enableTrack = false;
+                boolean isTracking = false;
                 try {
-                    enableTrack = (boolean) dataSnapshot.getValue();
+                    isTracking = (boolean) dataSnapshot.getValue();
                 } catch (NullPointerException e) {
-                    userDatabase.child(device_id).child("enableTrack").setValue(enableTrack);
+                    userDatabase.child(device_id).child("isTracking").setValue(isTracking);
                 }
 
-                if (enableTrack) {
+                if (isTracking) {
                     btnStartTrack.setVisibility(View.GONE);
                     btnStopTrack.setVisibility(View.VISIBLE);
                 } else {
@@ -143,19 +143,19 @@ public class HomeActivity extends Activity {
             }
         });
 
-        userDatabase.child(device_id).child("enableBait").addValueEventListener(new ValueEventListener() {
+        userDatabase.child(device_id).child("isBaitMode").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try {
-                    boolean enableBait = (boolean) dataSnapshot.getValue();
+                    boolean isBaitMode = (boolean) dataSnapshot.getValue();
                     Log.d("======", "home activity");
-                    if (enableBait) {
-//                        PowerButtonService.enableBait = true;
+                    if (isBaitMode) {
+//                        PowerButtonService.isBaitMode = true;
                         finish();
                     }
                 } catch (NullPointerException e) {
-                    PowerButtonService.enableBait = false;
-                    userDatabase.child(device_id).child("enableBait").setValue(false);
+                    PowerButtonService.isBaitMode = false;
+                    userDatabase.child(device_id).child("isBaitMode").setValue(false);
                 }
             }
 
@@ -177,7 +177,7 @@ public class HomeActivity extends Activity {
         String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
                 Settings.Secure.ANDROID_ID);
 
-        mDatabase.child("users").child(userId).child(device_id).child("enableTrack").setValue(false);
+        mDatabase.child("users").child(userId).child(device_id).child("isTracking").setValue(false);
     }
 
     @OnClick(R.id.btn_ok)
@@ -204,7 +204,7 @@ public class HomeActivity extends Activity {
                 String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
                         Settings.Secure.ANDROID_ID);
 
-                mDatabase.child("users").child(userId).child(device_id).child("enableTrack").setValue(true);
+                mDatabase.child("users").child(userId).child(device_id).child("isTracking").setValue(true);
             }
 
             this.viewDialog.setVisibility(View.GONE);
@@ -385,7 +385,7 @@ public class HomeActivity extends Activity {
         }
 
         final DatabaseReference userDatabase = mDatabase.child("users").child(userId);
-        userDatabase.child(device_id).child("enableTrack").setValue(false);
+        userDatabase.child(device_id).child("isTracking").setValue(false);
 
         super.onDestroy();
     }

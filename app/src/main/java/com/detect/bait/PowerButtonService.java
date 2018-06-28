@@ -54,8 +54,8 @@ public class PowerButtonService extends Service {
     private FirebaseAuth firebaseAuth;
 
     private DatabaseReference mDatabase;
-    public static boolean enableTrack = false;
-    public static boolean enableBait = false;
+    public static boolean isTracking = false;
+    public static boolean isBaitMode = false;
     public static String activityName = "Bait Mode";
 
     Location mLastLocation;
@@ -80,21 +80,21 @@ public class PowerButtonService extends Service {
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
         mDatabase = databaseReference.child("users").child(userId).child(device_id);
 
-        mDatabase.child("enableTrack").addValueEventListener(new ValueEventListener() {
+        mDatabase.child("isTracking").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try {
-                    boolean enableTrack = (boolean) dataSnapshot.getValue();
-                    if (enableTrack) {
-                        PowerButtonService.enableTrack = true;
+                    boolean isTracking = (boolean) dataSnapshot.getValue();
+                    if (isTracking) {
+                        PowerButtonService.isTracking = true;
                         startTrack();
                     } else {
-                        PowerButtonService.enableTrack = false;
+                        PowerButtonService.isTracking = false;
                         stopTrack();
                     }
                 } catch (NullPointerException e) {
-                    PowerButtonService.enableTrack = true;
-                    mDatabase.child("enableTrack").setValue(true);
+                    PowerButtonService.isTracking = true;
+                    mDatabase.child("isTracking").setValue(true);
                     startTrack();
                 }
             }
@@ -106,33 +106,33 @@ public class PowerButtonService extends Service {
         });
 
 
-        mDatabase.child("enableBait").addValueEventListener(new ValueEventListener() {
+        mDatabase.child("isBaitMode").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 try {
 
-                    boolean enableBait = (boolean) dataSnapshot.getValue();
-                    if (enableBait != PowerButtonService.enableBait) {
+                    boolean isBaitMode = (boolean) dataSnapshot.getValue();
+                    if (isBaitMode != PowerButtonService.isBaitMode) {
 
-                        if (enableBait) {
-                            PowerButtonService.enableBait = true;
+                        if (isBaitMode) {
+                            PowerButtonService.isBaitMode = true;
                             activityName = "Bait Mode";
-                            mDatabase.child("enableTrack").setValue(true);
+                            mDatabase.child("isTracking").setValue(true);
                             detectPowerKeys();
                         } else {
-                            PowerButtonService.enableBait = false;
-                            mDatabase.child("enableTrack").setValue(false);
+                            PowerButtonService.isBaitMode = false;
+                            mDatabase.child("isTracking").setValue(false);
                             showHomeActivity();
                         }
                     }
 
                 } catch (NullPointerException e) {
-                    if (PowerButtonService.enableBait) {
+                    if (PowerButtonService.isBaitMode) {
                         showHomeActivity();
 
-                        PowerButtonService.enableBait = false;
-                        mDatabase.child("enableBait").setValue(false);
-                        mDatabase.child("enableTrack").setValue(false);
+                        PowerButtonService.isBaitMode = false;
+                        mDatabase.child("isBaitMode").setValue(false);
+                        mDatabase.child("isTracking").setValue(false);
                     }
                 }
             }
@@ -187,7 +187,7 @@ public class PowerButtonService extends Service {
                 }
 
                 // start location track with time interval
-                if (PowerButtonService.enableTrack) {
+                if (PowerButtonService.isTracking) {
 
                     initializeLocationManager();
 
@@ -216,7 +216,7 @@ public class PowerButtonService extends Service {
 
                 Log.i(Key_TAG, reason);
 
-                if (!PowerButtonService.enableBait) {
+                if (!PowerButtonService.isBaitMode) {
                     return;
                 }
 
