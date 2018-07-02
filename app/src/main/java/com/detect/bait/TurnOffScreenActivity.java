@@ -25,7 +25,6 @@ import butterknife.OnClick;
 
 public class TurnOffScreenActivity extends Activity {
 
-    public static boolean isPowerOff = false;
     private int mBackLight = 0;
 
     private HomeKeyLocker mHomeKeyLocker;
@@ -158,7 +157,7 @@ public class TurnOffScreenActivity extends Activity {
 
     @OnClick(R.id.resume_view)
     public void onResume(View view) {
-        isPowerOff = false;
+        Constant.isPowerOff = false;
 
         IntentFilter filter = new IntentFilter("TurnOn");
         TurnOnBroadcastReceiver receiver = new TurnOnBroadcastReceiver();
@@ -174,7 +173,7 @@ public class TurnOffScreenActivity extends Activity {
     }
 
     private void turnOff() {
-        isPowerOff = true;
+        Constant.isPowerOff = true;
 
         disableHomebutton();
 

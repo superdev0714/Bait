@@ -6,13 +6,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -56,8 +54,7 @@ public class PowerButtonService extends Service {
     private FirebaseAuth firebaseAuth;
 
     private DatabaseReference mDatabase;
-    public static boolean isTracking = false;
-    public static boolean isBaitMode = false;
+
     private String activityName = "Bait Mode";
 
     Location mLastLocation;
@@ -88,14 +85,14 @@ public class PowerButtonService extends Service {
                 try {
                     boolean isTracking = (boolean) dataSnapshot.getValue();
                     if (isTracking) {
-                        PowerButtonService.isTracking = true;
+                        Constant.isTracking = true;
                         startTrack();
                     } else {
-                        PowerButtonService.isTracking = false;
+                        Constant.isTracking = false;
                         stopTrack();
                     }
                 } catch (NullPointerException e) {
-                    PowerButtonService.isTracking = false;
+                    Constant.isTracking = false;
                     mDatabase.child("isTracking").setValue(false);
                     stopTrack();
                 }
@@ -114,10 +111,10 @@ public class PowerButtonService extends Service {
                 try {
 
                     boolean isBaitMode = (boolean) dataSnapshot.getValue();
-                    if (isBaitMode != PowerButtonService.isBaitMode) {
+                    if (isBaitMode != Constant.isBaitMode) {
 
                         if (isBaitMode) {
-                            PowerButtonService.isBaitMode = true;
+                            Constant.isBaitMode = true;
                             activityName = "Bait Mode";
 
                             SharedPreferences write_data = getApplicationContext().getSharedPreferences(Constant.SHARED_PR.SHARE_PREF, MODE_PRIVATE);
@@ -128,17 +125,17 @@ public class PowerButtonService extends Service {
                             mDatabase.child("isTracking").setValue(true);
                             detectPowerKeys();
                         } else {
-                            PowerButtonService.isBaitMode = false;
+                            Constant.isBaitMode = false;
                             mDatabase.child("isTracking").setValue(false);
                             showHomeActivity();
                         }
                     }
 
                 } catch (NullPointerException e) {
-                    if (PowerButtonService.isBaitMode) {
+                    if (Constant.isBaitMode) {
                         showHomeActivity();
 
-                        PowerButtonService.isBaitMode = false;
+                        Constant.isBaitMode = false;
                         mDatabase.child("isBaitMode").setValue(false);
                         mDatabase.child("isTracking").setValue(false);
                     }
@@ -195,7 +192,7 @@ public class PowerButtonService extends Service {
                 }
 
                 // start location track with time interval
-                if (PowerButtonService.isTracking) {
+                if (Constant.isTracking) {
 
                     initializeLocationManager();
 
@@ -224,7 +221,7 @@ public class PowerButtonService extends Service {
 
                 Log.i(Key_TAG, reason);
 
-                if (!PowerButtonService.isBaitMode) {
+                if (!Constant.isBaitMode) {
                     return;
                 }
 
@@ -237,7 +234,7 @@ public class PowerButtonService extends Service {
                     Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
                     sendBroadcast(closeDialog);
 
-                    if (!TurnOffScreenActivity.isPowerOff) {
+                    if (!Constant.isPowerOff) {
 
                         // disable button sound, vibration
                         try {
@@ -263,7 +260,7 @@ public class PowerButtonService extends Service {
                             e.printStackTrace();
                         }
 
-                        TurnOffScreenActivity.isPowerOff = false;
+                        Constant.isPowerOff = false;
                         Intent intent = new Intent();
                         intent.setAction("TurnOn");
                         sendBroadcast(intent);
@@ -275,7 +272,7 @@ public class PowerButtonService extends Service {
                 } else if ("recentapps".equals(reason)) {
                     Log.i("Key", "recent apps button clicked");
 
-                    if (TurnOffScreenActivity.isPowerOff) {
+                    if (Constant.isPowerOff) {
                         Intent closeDialog = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
                         sendBroadcast(closeDialog);
                     }

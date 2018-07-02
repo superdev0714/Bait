@@ -151,11 +151,11 @@ public class HomeActivity extends Activity {
                     boolean isBaitMode = (boolean) dataSnapshot.getValue();
                     Log.d("======", "home activity");
                     if (isBaitMode) {
-//                        PowerButtonService.isBaitMode = true;
+//                        Constant.isBaitMode = true;
                         finish();
                     }
                 } catch (NullPointerException e) {
-                    PowerButtonService.isBaitMode = false;
+                    Constant.isBaitMode = false;
                     userDatabase.child(device_id).child("isBaitMode").setValue(false);
                 }
             }
