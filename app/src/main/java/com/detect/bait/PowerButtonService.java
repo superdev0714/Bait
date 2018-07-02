@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.graphics.PixelFormat;
 import android.location.Criteria;
 import android.location.Location;
@@ -11,6 +12,7 @@ import android.location.LocationManager;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -56,7 +58,7 @@ public class PowerButtonService extends Service {
     private DatabaseReference mDatabase;
     public static boolean isTracking = false;
     public static boolean isBaitMode = false;
-    public static String activityName = "Bait Mode";
+    private String activityName = "Bait Mode";
 
     Location mLastLocation;
     Timer mTimer = new Timer();
@@ -93,9 +95,9 @@ public class PowerButtonService extends Service {
                         stopTrack();
                     }
                 } catch (NullPointerException e) {
-                    PowerButtonService.isTracking = true;
-                    mDatabase.child("isTracking").setValue(true);
-                    startTrack();
+                    PowerButtonService.isTracking = false;
+                    mDatabase.child("isTracking").setValue(false);
+                    stopTrack();
                 }
             }
 
@@ -117,6 +119,12 @@ public class PowerButtonService extends Service {
                         if (isBaitMode) {
                             PowerButtonService.isBaitMode = true;
                             activityName = "Bait Mode";
+
+                            SharedPreferences write_data = getApplicationContext().getSharedPreferences(Constant.SHARED_PR.SHARE_PREF, MODE_PRIVATE);
+                            SharedPreferences.Editor editor = write_data.edit();
+                            editor.putString("activityName", activityName);
+                            editor.apply();
+
                             mDatabase.child("isTracking").setValue(true);
                             detectPowerKeys();
                         } else {
@@ -312,10 +320,7 @@ public class PowerButtonService extends Service {
         mTimerTask = new TimerTask() {
             @Override
             public void run() {
-                Log.d("====", "test");
-
                 uploadLocationData();
-
             }
         };
 
@@ -323,31 +328,26 @@ public class PowerButtonService extends Service {
 
         removeLocationListeners();
 
+        try {
+            mLocationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER, 1000, 0,
+                    mLocationListeners[0]);
 
-//        if (mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Log.d(Location_TAG, "GPS_Provider is enabled.");
-            try {
-                mLocationManager.requestLocationUpdates(
-                        LocationManager.GPS_PROVIDER, 1000, 0,
-                        mLocationListeners[0]);
+        } catch (java.lang.SecurityException ex) {
+            Log.i(Location_TAG, "fail to request location update, ignore", ex);
+        } catch (IllegalArgumentException ex) {
+            Log.d(Location_TAG, "gps provider does not exist " + ex.getMessage());
+        }
 
-            } catch (java.lang.SecurityException ex) {
-                Log.i(Location_TAG, "fail to request location update, ignore", ex);
-            } catch (IllegalArgumentException ex) {
-                Log.d(Location_TAG, "gps provider does not exist " + ex.getMessage());
-            }
-//        } else {
-            Log.d(Location_TAG, "GPS_Provider is not enabled.");
-            try {
-                mLocationManager.requestLocationUpdates(
-                        LocationManager.NETWORK_PROVIDER, 1000, 0,
-                        mLocationListeners[1]);
-            } catch (java.lang.SecurityException ex) {
-                Log.i(Location_TAG, "fail to request location update, ignore", ex);
-            } catch (IllegalArgumentException ex) {
-                Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
-            }
-//        }
+        try {
+            mLocationManager.requestLocationUpdates(
+                    LocationManager.NETWORK_PROVIDER, 1000, 0,
+                    mLocationListeners[1]);
+        } catch (java.lang.SecurityException ex) {
+            Log.i(Location_TAG, "fail to request location update, ignore", ex);
+        } catch (IllegalArgumentException ex) {
+            Log.d(Location_TAG, "network provider does not exist, " + ex.getMessage());
+        }
     }
 
     // upload gps, time, battery info to Firebase.
@@ -361,8 +361,15 @@ public class PowerButtonService extends Service {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String strDate = dateFormat.format(current);
 
-        DatabaseReference databaseReference = mDatabase.child("locations").child(strDate).push();
+        SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences(Constant.SHARED_PR.SHARE_PREF, MODE_PRIVATE);
+        this.activityName = sharedPreferences.getString("activityName", "");
 
+        if (activityName == "") {
+
+            return;
+        }
+
+        DatabaseReference databaseReference = mDatabase.child("locations").child(strDate).push();
 
         dateFormat = new SimpleDateFormat("HH:mm:ss");
 

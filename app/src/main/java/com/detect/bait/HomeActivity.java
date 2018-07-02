@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
@@ -190,7 +191,10 @@ public class HomeActivity extends Activity {
             return;
         }
 
-        PowerButtonService.activityName = strActivityName;
+        SharedPreferences sharedPreferences = getSharedPreferences(Constant.SHARED_PR.SHARE_PREF, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("activityName", strActivityName);
+        editor.apply();
 
         if (checkDrawOverlayPermission()) {
             setInitialInterval();
