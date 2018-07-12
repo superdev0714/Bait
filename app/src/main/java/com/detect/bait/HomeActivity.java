@@ -373,23 +373,28 @@ public class HomeActivity extends Activity {
     public void onDestroy()
     {
         Log.e("======", "onDestroy");
-        String userId = firebaseAuth.getCurrentUser().getUid();
+        try {
+            String userId = firebaseAuth.getCurrentUser().getUid();
 
-        final String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
-                Settings.Secure.ANDROID_ID);
+            final String device_id = Settings.Secure.getString(getApplicationContext().getContentResolver(),
+                    Settings.Secure.ANDROID_ID);
 
-        if (mDatabase == null) {
-            FirebaseDatabase database = FirebaseDatabase.getInstance();
-            try {
-                database.setPersistenceEnabled(true);
-            } catch (DatabaseException e) {
-                e.printStackTrace();
+            if (mDatabase == null) {
+                FirebaseDatabase database = FirebaseDatabase.getInstance();
+                try {
+                    database.setPersistenceEnabled(true);
+                } catch (DatabaseException e) {
+                    e.printStackTrace();
+                }
+                mDatabase = database.getReference();
             }
-            mDatabase = database.getReference();
-        }
 
-        final DatabaseReference userDatabase = mDatabase.child("users").child(userId);
-        userDatabase.child(device_id).child("isTracking").setValue(false);
+            final DatabaseReference userDatabase = mDatabase.child("users").child(userId);
+            userDatabase.child(device_id).child("isTracking").setValue(false);
+
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
 
         super.onDestroy();
     }
